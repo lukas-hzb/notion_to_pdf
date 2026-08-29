@@ -48,7 +48,7 @@ not from a private Notion workspace.
 
 | Original profile | Reading profile |
 | :--------------: | :-------------: |
-| <img src="docs/images/original.png" alt="PDF preserving columns, toggle markers, and static task checkboxes" width="500" /> | <img src="docs/images/reading.png" alt="PDF preserving columns while converting toggles to sections and tasks to ordinary bullets" width="500" /> |
+| <img src="docs/images/original-framed.png" alt="Framed PDF preview preserving columns, toggle markers, and static task checkboxes" width="500" /> | <img src="docs/images/reading-framed.png" alt="Framed PDF preview preserving columns while converting toggles to sections and tasks to ordinary bullets" width="500" /> |
 
 ## Installation
 
