@@ -92,6 +92,19 @@ npm run export -- \
   --preset reading
 ```
 
+For example, on macOS, convert an export from `Downloads` and write the result
+back to a separate folder there:
+
+```sh
+npm run export -- \
+  --input "$HOME/Downloads/notion-export.zip" \
+  --out "$HOME/Downloads/Notion-PDF-Exports" \
+  --preset reading
+```
+
+Replace `notion-export.zip` with the actual ZIP filename. Paths containing
+spaces should remain inside quotes. The source ZIP is read but never modified.
+
 Every run creates a new `Notion-PDF-*` directory containing separate PDFs and
 an `export-report.json`. Existing files are never overwritten, and an
 unsuccessful batch removes its own incomplete directory.
