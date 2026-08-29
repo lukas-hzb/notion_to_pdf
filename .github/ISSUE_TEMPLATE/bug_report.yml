@@ -1,0 +1,88 @@
+name: Bug report
+description: Report a reproducible import, rendering, or CLI problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Do not upload personal Notion exports or reports containing private page titles, paths, or content.
+
+  - type: input
+    id: version
+    attributes:
+      label: Revision or version
+      description: Commit hash, tag, or version from `npm run export -- --version`.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: "24.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source structure
+      description: Describe the relevant Notion block or provide a minimal synthetic HTML example.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Export ...
+        2. Run ...
+        3. Open ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Paste relevant `--doctor` output or report issue codes after removing private paths, titles, and identifiers.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and reviewed the support matrix.
+          required: true
+        - label: I removed private Notion content, paths, identifiers, and credentials.
+          required: true

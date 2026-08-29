@@ -1,0 +1,66 @@
+{
+  "name": "notion-to-pdf",
+  "version": "0.1.0",
+  "description": "Convert Notion HTML exports into readable PDFs locally, without an app or account.",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": {
+    "name": "Lukas Harzbecker",
+    "url": "https://github.com/lukas-hzb"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukas-hzb/notion_to_pdf.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lukas-hzb/notion_to_pdf/issues"
+  },
+  "homepage": "https://github.com/lukas-hzb/notion_to_pdf#readme",
+  "keywords": [
+    "notion",
+    "pdf",
+    "export",
+    "html",
+    "cli",
+    "offline"
+  ],
+  "type": "module",
+  "main": "dist/main.cjs",
+  "bin": {
+    "notion-to-pdf": "scripts/export.mjs"
+  },
+  "engines": {
+    "node": ">=22.13.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "setup": "install-electron",
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/export.mjs",
+    "demo": "node scripts/export.mjs --input examples/field-notes --out artifacts/demo --preset reading --strict",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:pdf": "node scripts/test-pdf.mjs",
+    "check": "npm run typecheck && npm test && npm run build",
+    "export": "node scripts/export.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "katex": "0.18.4",
+    "parse5": "8.0.1",
+    "pdfjs-dist": "6.2.108",
+    "yauzl": "3.4.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/katex": "0.16.8",
+    "@types/node": "26.4.0",
+    "@types/yauzl": "3.4.0",
+    "electron": "44.0.0",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

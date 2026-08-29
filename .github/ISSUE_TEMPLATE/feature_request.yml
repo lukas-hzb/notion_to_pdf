@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose a focused improvement to import, layout, or the CLI.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or workflow problem should be solved?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the expected static PDF representation or CLI behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notion
+    attributes:
+      label: Notion representation
+      description: Link to public Notion documentation or describe the exported HTML structure. Do not attach private exports.
+
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Alternatives and trade-offs
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I reviewed the support matrix and existing issues.
+          required: true
+        - label: This request does not contain private Notion content.
+          required: true
