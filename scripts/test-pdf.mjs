@@ -163,7 +163,7 @@ for (const [name, flags] of [
   const result = await run(coverFile, path.join(root, name), [...flags, '--strict']);
   const report = JSON.parse(await readFile(path.join(result.directory, 'export-report.json'), 'utf8'));
   const pdf = await readPdf(path.join(result.directory, report.files[0]));
-  assert.equal(pdf.images, ['cover', 'landscape'].includes(name) ? 1 : 0, `Cover visibility in ${name}`);
+  assert.equal(pdf.images, name === 'no-cover' ? 0 : 1, `Cover visibility in ${name}`);
   assert.equal(pdf.links, 6, `All six page references must stay clickable in ${name}`);
   for (const marker of ['COVERREGRESSION', 'CALLOUTCONTENT', 'PINKREFERENCE', 'PAGEREFERENCE5']) assert(pdf.text.includes(marker), `Missing header content in ${name}: ${marker}`);
   assert(pdf.items.filter(item => /COVERREGRESSION|CALLOUTCONTENT/.test(item.text)).every(item => item.page === 1), 'Cover/title/callout must fit together on the first page.');

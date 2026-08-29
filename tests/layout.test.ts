@@ -83,16 +83,17 @@ describe('print transformations', () => {
     expect(header.indexOf('class="page-icon"')).toBeLessThan(header.indexOf('class="document-title"'));
     expect(header).toContain('fill="#c14c8a"');
     expect(header).not.toContain('stroke=');
+    const print = renderDocument(snapshot, page, presetOptions('print'), '').html;
+    expect(print).toContain('class="document-header with-cover with-icon"');
+    expect(print).toContain('class="page-cover"');
   });
-  it('does not apply icon overlap when the cover is disabled, missing or suppressed for print', () => {
+  it('does not apply icon overlap when the cover is disabled or missing', () => {
     const { snapshot, page } = setup();
     page.cover = 'cover'; page.icon = '📖';
     snapshot.assets.cover = { id: 'cover', mime: 'image/png', dataUrl: 'data:image/png;base64,AA==' };
-    for (const options of [{ ...defaultOptions, includeCover: false }, presetOptions('print')]) {
-      const { html } = renderDocument(snapshot, page, options, '');
-      expect(html).not.toContain('with-cover'); expect(html).not.toContain('class="page-cover"');
-      expect(html).toContain('class="page-icon">📖');
-    }
+    const disabled = renderDocument(snapshot, page, { ...defaultOptions, includeCover: false }, '').html;
+    expect(disabled).not.toContain('with-cover'); expect(disabled).not.toContain('class="page-cover"');
+    expect(disabled).toContain('class="page-icon">📖');
     delete snapshot.assets.cover;
     const { html } = renderDocument(snapshot, page, defaultOptions, '');
     expect(html).not.toContain('with-cover'); expect(html).not.toContain('missing-media');

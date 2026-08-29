@@ -31,7 +31,7 @@ the command only prints help, a version, diagnostics, or a page list.
 | `--no-task-status` | flag | off | Removes completion state from the chosen task representation. |
 | `--keep-task-status` | flag | off | Retains completion styling even when tasks become bullets. |
 | `--no-page-numbers` | flag | off | Hides footer page numbers. |
-| `--no-cover` | flag | off | Omits the page cover and its reserved space. |
+| `--no-cover` | flag | off | Omits the page cover and its reserved space. Covers are otherwise retained in every preset. |
 
 Explicit source strikethrough remains visible regardless of task settings.
 Bullet mode removes completion styling by default; `--keep-task-status` opts

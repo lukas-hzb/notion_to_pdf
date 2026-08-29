@@ -238,9 +238,10 @@ export function renderDocument(snapshot: Snapshot, page: DocumentPage, options: 
       }
     }
   }
-  // Resolve visibility before adding overlap spacing, including the ink-saving
-  // profile. Missing/disabled covers must never pull the icon above the page.
-  const cover = options.includeCover && options.preset !== 'print' && page.cover ? snapshot.assets[page.cover] : undefined;
+  // Resolve visibility before adding overlap spacing. Missing or explicitly
+  // disabled covers must never pull the icon above the page; presets do not
+  // override the dedicated includeCover option.
+  const cover = options.includeCover && page.cover ? snapshot.assets[page.cover] : undefined;
   const pageIcon = icon(page);
   const header = `<header class="document-header${cover ? ' with-cover' : ''}${pageIcon ? ' with-icon' : ''}">${cover ? `<img class="page-cover" src="${cover.dataUrl}" alt="">` : ''}${pageIcon ? `<div class="page-icon">${pageIcon}</div>` : ''}<h1 class="document-title">${esc(page.title)}</h1></header>`;
   const content = renderAll(page.blocks);

@@ -423,9 +423,6 @@ th {
 .preset-print a {
   color: inherit;
 }
-.preset-print .page-cover {
-  display: none;
-}
 @media print {
   body {
     width: auto;
