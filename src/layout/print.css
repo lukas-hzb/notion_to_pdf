@@ -21,7 +21,7 @@ html {
 }
 body {
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 .notion-font-serif {
   font-family: Georgia, "Times New Roman", serif;
@@ -62,27 +62,31 @@ h3 strong,
 h4 strong {
   font-weight: 600;
 }
+/* These level-specific values reproduce the visible block geometry of
+   Notion's A4 export at 12pt. rem units preserve the same rhythm when a
+   compact or larger exporter font size is selected. */
 h1 {
   font-size: 1.875em;
-  margin: 1.875rem 0 var(--space-heading-content);
+  margin: 1.5rem 0 .72rem;
 }
 h2 {
   font-size: 1.5em;
-  margin: 1.5rem 0 var(--space-heading-content);
+  margin: 1.367rem 0 .666rem;
 }
 h3 {
   font-size: 1.25em;
-  margin: 1.25rem 0 var(--space-heading-content);
+  margin: 1.18rem 0 .548rem;
 }
 h4 {
   font-size: 1.05em;
   margin: 1.1rem 0 var(--space-heading-content);
 }
 .document-title {
-  font-size: 2.65em;
+  font-size: 2.5em;
+  font-weight: 700;
   line-height: 1.1;
-  margin: .2em 0 .85em;
-  letter-spacing: -.045em;
+  margin: -.196em 0 .91em;
+  letter-spacing: -.01em;
 }
 .document-header {
   break-inside: avoid;
@@ -672,9 +676,9 @@ sub {
   margin-bottom: 0;
 }
 [data-block-type="paragraph"], [data-block-type="list"] { --gap-before: var(--space-text); }
-h1[data-block-type="heading"] { --gap-before: 1.875rem; }
-h2[data-block-type="heading"] { --gap-before: 1.5rem; }
-h3[data-block-type="heading"] { --gap-before: 1.25rem; }
+h1[data-block-type="heading"] { --gap-before: 1.5rem; }
+h2[data-block-type="heading"] { --gap-before: 1.367rem; }
+h3[data-block-type="heading"] { --gap-before: 1.18rem; }
 h4[data-block-type="heading"] { --gap-before: 1.1rem; }
 [data-block-type="pageLink"] { --gap-before: .25rem; }
 [data-block-type="toggle"] { --gap-before: .65rem; }
@@ -682,9 +686,9 @@ h4[data-block-type="heading"] { --gap-before: 1.1rem; }
 [data-block-type="divider"] { --gap-before: var(--space-text); }
 [data-block-type="file"] { --gap-before: .65rem; }
 [data-block-type="bookmark"].bookmark-compact { --gap-before: .7rem; }
-.heading-media.heading-level-1 { --gap-before: 1.875rem; }
-.heading-media.heading-level-2 { --gap-before: 1.5rem; }
-.heading-media.heading-level-3 { --gap-before: 1.25rem; }
+.heading-media.heading-level-1 { --gap-before: 1.5rem; }
+.heading-media.heading-level-2 { --gap-before: 1.367rem; }
+.heading-media.heading-level-3 { --gap-before: 1.18rem; }
 .heading-media.heading-level-4 { --gap-before: 1.1rem; }
 .heading-media { break-inside: avoid; }
 .heading-media > .image-block img {
@@ -706,6 +710,9 @@ h4[data-block-type="heading"] { --gap-before: 1.1rem; }
 [data-block-type="heading"] + [data-block-type]:not(:where([data-block-type="divider"])) {
   --gap-before: var(--space-heading-content);
 }
+[data-block-type="heading"]:is(h1) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: .72rem; }
+[data-block-type="heading"]:is(h2) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: .666rem; }
+[data-block-type="heading"]:is(h3) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: .548rem; }
 [data-block-type="heading"] + [data-block-type="heading"] { --gap-before: .65rem; }
 .tab-title + [data-block-type] { --gap-before: var(--space-heading-content); }
 [data-block-type="list"] + [data-block-type="list"], li > [data-block-type="list"] {

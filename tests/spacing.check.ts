@@ -9,9 +9,9 @@ import type { Snapshot } from '../src/domain/model';
 
 const cases = [
   ['paragraph', '<p>Paragraph</p>', .55, .55],
-  ['heading', '<h2>Heading</h2>', 1.5, .5],
-  ['heading1', '<h1>Heading one</h1>', 1.875, .5],
-  ['heading3', '<h3>Heading three</h3>', 1.25, .5],
+  ['heading', '<h2>Heading</h2>', 1.367, .666],
+  ['heading1', '<h1>Heading one</h1>', 1.5, .72],
+  ['heading3', '<h3>Heading three</h3>', 1.18, .548],
   ['heading4', '<h4>Heading four</h4>', 1.1, .5],
   ['bullets', '<ul><li>First</li><li>Second</li></ul>', .55, .3],
   ['numbers', '<ol><li>First</li><li>Second</li></ol>', .55, .3],
@@ -35,9 +35,11 @@ const cases = [
 ] as const;
 const pairs = cases.flatMap((before, i) => cases.map((after, j) => {
   const lists = ['bullets', 'numbers', 'tasks'];
-  const top = before[0].startsWith('heading') && after[0] !== 'divider' ? after[0].startsWith('heading') ? .65 : .5
+  const headingAfter = before[0] === 'heading1' ? .72 : before[0] === 'heading' ? .666 : before[0] === 'heading3' ? .548 : .5;
+  const top = before[0].startsWith('heading') && after[0] !== 'divider' ? after[0].startsWith('heading') ? .65 : headingAfter
     : lists.includes(before[0]) && lists.includes(after[0]) ? .3 : after[2];
-  return { id: `pair-${i}-${j}`, before: before[0], after: after[0], expected: Math.max(before[3], top),
+  const previous = before[0].startsWith('heading') ? .5 : before[3];
+  return { id: `pair-${i}-${j}`, before: before[0], after: after[0], expected: Math.max(previous, top),
     html: `<div class="column-list"><div class="column" id="pair-${i}-${j}">${before[1]}${after[1]}</div></div>` };
 }));
 const symbol = '<div><img class="icon" src="https://app.notion.com/icons/exclamation-mark_gray.svg"></div>';
@@ -67,6 +69,7 @@ const snapshot: Snapshot = { version: 1, id: 'spacing', name: 'spacing', importe
 function measure() {
   const box = (el: Element) => el.getBoundingClientRect();
   const center = (el: Element) => { const b = box(el); return (b.top + b.bottom) / 2; };
+  const titleStyle = getComputedStyle(document.querySelector('.document-title')!);
   const gaps = Array.from(document.querySelectorAll('[id^="pair-"]')).map(el => {
     const blocks = el.querySelectorAll(':scope > [data-block], :scope > .heading-media > [data-block]');
     return { id: el.id, gap: box(blocks[1]!).top - box(blocks[0]!).bottom };
@@ -95,7 +98,10 @@ function measure() {
   const image = (id: string) => { const figure = document.getElementById(id)!; const media = figure.querySelector('img')!; return {
     ratio: box(media).width / box(figure).width, offset: center(media) - center(figure),
   }; };
-  return { rem: parseFloat(getComputedStyle(document.documentElement).fontSize), gaps, callouts, edgeErrors,
+  return { rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
+    bodyLineHeight: parseFloat(getComputedStyle(document.body).lineHeight),
+    titleFontSize: parseFloat(titleStyle.fontSize), titleWeight: titleStyle.fontWeight,
+    titleLetterSpacing: parseFloat(titleStyle.letterSpacing), gaps, callouts, edgeErrors,
     detailsGap: parseFloat(getComputedStyle(details).marginTop),
     nestedItemGap: box(nested.children[1]!).top - box(nested.children[0]!).bottom,
     nestedBottom: box(firstItem).bottom - box(nested).bottom,
@@ -121,6 +127,10 @@ async function main() {
       await window.loadURL(`${url}${options.preset}-${options.fontSize}`);
       await window.webContents.executeJavaScript('document.fonts.ready.then(() => Promise.all(Array.from(document.images, image => image.decode())))');
       const result = await window.webContents.executeJavaScript(`(${measure.toString()})()`) as ReturnType<typeof measure>;
+      assert(Math.abs(result.bodyLineHeight - 1.5 * result.rem) < .1, 'Body line height must match Notion.');
+      assert(Math.abs(result.titleFontSize - 2.5 * result.rem) < .1, 'Page title size must match Notion.');
+      assert.equal(result.titleWeight, '700', 'Page title weight must match Notion.');
+      assert(Math.abs(result.titleLetterSpacing + .025 * result.rem) < .1, 'Page title tracking must match Notion.');
       assert.equal(result.gaps.length, pairs.length);
       for (const pair of pairs) {
         const actual = result.gaps.find(gap => gap.id === pair.id)!.gap;
