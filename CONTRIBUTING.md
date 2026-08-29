@@ -1,9 +1,10 @@
 # Contributing
 
 Thanks for taking the time to improve Notion to PDF. Bug reports and focused
-feature proposals are welcome. Because the project is proprietary and does not
-currently grant a general source-code license, contact the maintainer before
-starting a substantial code contribution or public fork.
+feature proposals are welcome. Because the project is proprietary
+source-available software, code contributions require prior written
+authorization from the maintainer before creating a public fork or submitting a
+pull request.
 
 ## Before opening an issue
 
@@ -44,10 +45,9 @@ A pull request should explain:
 - how the change was tested;
 - known limitations or visual trade-offs.
 
-By submitting a contribution, you confirm that you have the right to submit it
-and agree that the maintainer may use it under the project's existing terms.
-This paragraph is not a contributor license agreement and does not grant a
-license to the repository.
+By submitting a contribution, you agree to section 5 of [LICENSE](LICENSE),
+including its contributor grant and representations. Third-party material must
+be clearly identified and compatible with the project's distribution model.
 
 ## Security reports
 

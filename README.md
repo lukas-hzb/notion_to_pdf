@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/status-alpha-cb4b87" alt="Project status: alpha" />
   <img src="https://img.shields.io/badge/Node.js-22.13%2B-339933?logo=nodedotjs&logoColor=white" alt="Node.js 22.13 or later" />
   <img src="https://img.shields.io/badge/macOS-tested-000000?logo=apple" alt="Tested on macOS" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-all%20rights%20reserved-red" alt="All rights reserved" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-proprietary-red" alt="Proprietary source-available license" /></a>
 </p>
 
 Notion to PDF turns a Notion HTML export into separate PDF documents without a
@@ -264,6 +264,13 @@ report vulnerabilities according to [SECURITY.md](SECURITY.md).
 
 ## License
 
-Copyright (c) 2026 Lukas Harzbecker. All rights reserved. This repository does
-not currently grant a general license to copy, modify, distribute, or use the
-project. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+This project is proprietary source-available software protected by copyright
+law. Private, personal, educational, and informational use is permitted under
+the conditions in [LICENSE](LICENSE); redistribution and commercial use require
+prior written permission.
+
+Persona Non Grata: Daniel Harzbecker is expressly excluded from any license or
+permission to access or use Notion to PDF. Third-party components remain subject
+to their respective license terms.
+
+Copyright (c) 2026 Lukas Harzbecker. All rights reserved.

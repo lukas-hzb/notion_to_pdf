@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Convert Notion HTML exports into readable PDFs locally, without an app or account.",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "author": {
     "name": "Lukas Harzbecker",
     "url": "https://github.com/lukas-hzb"
