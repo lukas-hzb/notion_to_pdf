@@ -14,6 +14,18 @@ const has = (node: Node, name: string) => classes(node).includes(name);
 const find = (node: Node, predicate: (node: Node) => boolean): Node | undefined => predicate(node) ? node : nodes(node).map(n => find(n, predicate)).find(Boolean);
 const blocked = new Set(['script', 'style', 'noscript', 'link', 'meta', 'base', 'template']);
 const text = (node: Node): string => blocked.has(tag(node)) ? '' : node.nodeName === '#text' ? (node as DefaultTreeAdapterMap['textNode']).value : nodes(node).map(text).join('');
+const parent = (node: Node): Node | undefined => (node as Node & { parentNode?: Node | null }).parentNode ?? undefined;
+const hasAncestor = (node: Node, predicate: (node: Node) => boolean): boolean => {
+  for (let current = parent(node); current; current = parent(current)) if (predicate(current)) return true;
+  return false;
+};
+
+// A regular Notion editor column is approximately 710 CSS pixels wide. The
+// HTML export stores image widths in those editor pixels, while a PDF content
+// column varies with paper and margins. Preserve the visual ratio for free
+// images; images inside columns/tables keep their pixel width and are capped by
+// their actual container instead.
+const notionImageWidth = 710;
 
 const colors: Record<string, string> = { gray: '#77766f', brown: '#906341', orange: '#c06b2c', yellow: '#aa861b', green: '#347953', teal: '#347953', blue: '#286ba5', purple: '#875da5', pink: '#c14c8a', red: '#b94c4c' };
 const backgrounds: Record<string, string> = { gray: '#f7f6f5', brown: '#f1e9e1', orange: '#fbeddc', yellow: '#fbf3d5', green: '#e7f1e9', teal: '#e7f1e9', blue: '#e5eff8', purple: '#eee7f5', pink: '#f6e7ef', red: '#f9e5e5' };
@@ -242,7 +254,10 @@ export function parseNotionHtml(html: string, sourcePath: string): DocumentPage 
       if (image) {
         const width = /(?:^|;)\s*width\s*:\s*([\d.]+)px\s*(?:;|$)/i.exec(attr(image, 'style') ?? '');
         const align = /(?:^|;)\s*text-align\s*:\s*(left|center|right)\s*(?:;|$)/i.exec(attr(node, 'style') ?? '');
-        return [block('image', node, { src: attr(image, 'src'), alt: attr(image, 'alt') || '', imageWidth: width ? Math.max(1, Math.min(10000, Number(width[1]))) : undefined, imageAlign: align?.[1]?.toLowerCase() as Block['imageAlign'], caption: caption ? inlines(caption) : [] })];
+        const imageWidth = width ? Math.max(1, Math.min(10000, Number(width[1]))) : undefined;
+        const constrained = hasAncestor(node, ancestor => has(ancestor, 'column') || ['td', 'th', 'aside', 'blockquote', 'li'].includes(tag(ancestor)));
+        const imageWidthPercent = imageWidth && !constrained ? Math.min(100, imageWidth / notionImageWidth * 100) : undefined;
+        return [block('image', node, { src: attr(image, 'src'), alt: attr(image, 'alt') || '', imageWidth, imageWidthPercent, imageAlign: align?.[1]?.toLowerCase() as Block['imageAlign'], caption: caption ? inlines(caption) : [] })];
       }
       const anchor = find(node, child => tag(child) === 'a');
       if (anchor) return [block('file', node, { href: safeLink(attr(anchor, 'href')), content: inlines(anchor).map(({ href: _href, ...item }) => item), caption: caption ? inlines(caption) : [] })];

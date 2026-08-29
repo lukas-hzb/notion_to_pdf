@@ -110,10 +110,10 @@ or content combination.
 
 | Block | Status | PDF representation or limitation |
 | :---- | :----: | :------------------------------- |
-| Local PNG/JPEG/GIF/WebP image | ✅ | Embedded proportionally with width, alignment, and caption. GIF animation becomes a static frame. |
+| Local PNG/JPEG/GIF/WebP image | ✅ | Embedded proportionally with Notion's editor width mapped to the PDF column, centered alignment, and caption. GIF animation becomes a static frame. |
 | SVG content image | — | Arbitrary SVG is not executed or embedded; safe rasterization is not implemented. |
 | Remote image | ◐ | Not downloaded; a visible fallback and warning are produced. |
-| Display equation | ✅ | Centered local KaTeX rendering with source fallback on failure. |
+| Display equation | ✅ | Centered local KaTeX rendering, including bare Notion multiline expressions, with source fallback on failure. |
 | Code | ✅ | Escaped monospace block with preserved indentation and language label. |
 | Syntax highlighting | ◐ | Source remains readable, but token colors are not reconstructed. |
 | Mermaid code | ↻ | Printed as source code; diagrams are not executed. |

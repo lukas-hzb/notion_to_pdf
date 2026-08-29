@@ -52,6 +52,7 @@ export interface Block extends IconFields {
   background?: string;
   src?: string;
   imageWidth?: number;
+  imageWidthPercent?: number;
   imageAlign?: 'left' | 'center' | 'right';
   description?: Inline[];
   preview?: string;

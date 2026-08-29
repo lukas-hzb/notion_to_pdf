@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseNotionHtml } from '../src/importers/html';
-import { renderDocument } from '../src/layout/render';
+import { normalizeDisplayEquation, renderDocument } from '../src/layout/render';
 import { defaultOptions, optionsSchema, presetOptions } from '../src/domain/options';
 import type { Snapshot } from '../src/domain/model';
 
@@ -231,5 +231,27 @@ describe('print transformations', () => {
     expect(html).toContain('<sub>2</sub>'); expect(html).toContain('<s>Explicit deletion</s>');
     expect(html).not.toContain('task-done'); expect(html).not.toContain('wrong');
     expect(issues.filter(issue => issue.severity !== 'info')).toEqual([]);
+  });
+  it('stacks Notion block-equation source lines without changing matrix environments', () => {
+    const expression = '\\boxed{1.\\quad 0\\in U} \\\\\n\\boxed{2.\\quad u,v\\in U} \\\\\n\\boxed{3.\\quad \\lambda u\\in U}';
+    expect(normalizeDisplayEquation(expression)).toBe(`\\begin{gathered}${expression}\\end{gathered}`);
+    const matrix = '\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix}';
+    expect(normalizeDisplayEquation(matrix)).toBe(matrix);
+    const page = parseNotionHtml(`<article><div data-notion-equation="${expression}"></div></article>`, 'multiline-math.html');
+    const snapshot: Snapshot = { version: 1, id: 'snapshot', importedAt: '', name: 'test', pages: [page], assets: {}, issues: [] };
+    const { html, issues } = renderDocument(snapshot, page, defaultOptions, '');
+    expect(html.match(/class="[^"]*\bfbox\b[^"]*"/g)).toHaveLength(3);
+    expect(html).toContain('\\begin{gathered}');
+    expect(issues).toEqual([]);
+  });
+  it('centers images, preserves relative widths and sizes plain-text arrows like Notion', () => {
+    const page = parseNotionHtml('<article><p>→ Text zusammenfassen</p><p><code>→</code></p><figure style="text-align:right"><img style="width:355px" src="image.png"></figure></article>', 'visual-details.html');
+    const snapshot: Snapshot = { version: 1, id: 'snapshot', importedAt: '', name: 'test', pages: [page], assets: { 'image.png': { id: 'image.png', mime: 'image/png', dataUrl: 'data:image/png;base64,AA==' } }, issues: [] };
+    const { html } = renderDocument(snapshot, page, defaultOptions, '');
+    expect(html).toContain('<span class="notion-arrow">→</span> Text');
+    expect(html).toContain('<code>→</code>');
+    expect(html).toContain('class="image-block align-center"');
+    expect(html).toContain('style="width:50%"');
+    expect(html).not.toContain('align-right');
   });
 });

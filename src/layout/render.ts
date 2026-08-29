@@ -5,11 +5,21 @@ import type { ExportOptions } from '../domain/options';
 export const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const esc = escapeHtml;
 
+export function normalizeDisplayEquation(expression: string): string {
+  // Notion accepts bare line breaks in a block equation. KaTeX recognizes the
+  // tokens but does not create vertical rows unless they live in an equation
+  // layout. Exported multiline formulas place those breaks on separate source
+  // lines, so matrices/cases with their own environments remain untouched.
+  return /\\\\[ \t]*\r?\n/.test(expression) && !/\\begin\s*\{(?:gathered|aligned|alignedat|array|matrix|pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|cases)\}/.test(expression)
+    ? `\\begin{gathered}${expression}\\end{gathered}`
+    : expression;
+}
+
 export function renderDocument(snapshot: Snapshot, page: DocumentPage, options: ExportOptions, style: string): { html: string; issues: Issue[] } {
   const issues: Issue[] = [...page.issues];
   const report = (code: string, message: string, blockId?: string) => issues.push({ code, message, blockId, pageId: page.id, severity: 'warning' });
   const math = (expression: string, displayMode = false, blockId?: string) => {
-    try { return katex.renderToString(expression, { displayMode, throwOnError: true, trust: false, strict: 'error', maxExpand: 500, maxSize: 20, output: 'htmlAndMathml' }); }
+    try { return katex.renderToString(displayMode ? normalizeDisplayEquation(expression) : expression, { displayMode, throwOnError: true, trust: false, strict: 'error', maxExpand: 500, maxSize: 20, output: 'htmlAndMathml' }); }
     catch { report('equation-fallback', 'Eine Formel konnte nicht gesetzt werden; der Originalausdruck wird angezeigt.', blockId); return `<code>${esc(expression)}</code>`; }
   };
   function inline(items: Inline[], blockId?: string, links = true): string {
@@ -19,7 +29,8 @@ export function renderDocument(snapshot: Snapshot, page: DocumentPage, options: 
         return `<svg class="property-icon" viewBox="0 0 20 20" aria-label="${item.propertyIcon}" fill="none" stroke="currentColor" stroke-width="1.5"><path d="${paths[item.propertyIcon]}"/></svg>`;
       }
       if (item.checkbox !== undefined) return `<span class="property-checkbox" aria-label="${item.checkbox ? 'Erledigt' : 'Offen'}">${item.checkbox ? '☑' : '☐'}</span>`;
-      let value = item.equation !== undefined ? math(item.equation, false, blockId) : esc(item.text).replace(/\n/g, '<br>');
+      const plain = esc(item.text).replace(/\n/g, '<br>');
+      let value = item.equation !== undefined ? math(item.equation, false, blockId) : item.code ? plain : plain.replace(/→/g, '<span class="notion-arrow">→</span>');
       if (item.code) value = `<code>${value}</code>`;
       if (item.bold) value = `<strong>${value}</strong>`;
       if (item.italic) value = `<em>${value}</em>`;
@@ -161,8 +172,9 @@ export function renderDocument(snapshot: Snapshot, page: DocumentPage, options: 
       case 'divider': return `<hr ${attrs}>`;
       case 'image': {
         const asset = block.src ? snapshot.assets[block.src] : undefined;
-        const picture = asset ? `<img src="${asset.dataUrl}" alt="${esc(block.alt || '')}"${block.imageWidth ? ` style="width:${block.imageWidth}px"` : ''}>` : `<div class="missing-media">Bild nicht verfügbar${block.alt ? `: ${esc(block.alt)}` : ''}</div>`;
-        return `<figure ${attrs} class="image-block align-${block.imageAlign || 'left'}">${picture}${block.caption?.length ? `<figcaption>${inline(block.caption, block.id)}</figcaption>` : ''}</figure>`;
+        const imageWidth = block.imageWidthPercent ? `${Number(block.imageWidthPercent.toFixed(4))}%` : block.imageWidth ? `${block.imageWidth}px` : undefined;
+        const picture = asset ? `<img src="${asset.dataUrl}" alt="${esc(block.alt || '')}"${imageWidth ? ` style="width:${imageWidth}"` : ''}>` : `<div class="missing-media">Bild nicht verfügbar${block.alt ? `: ${esc(block.alt)}` : ''}</div>`;
+        return `<figure ${attrs} class="image-block align-center">${picture}${block.caption?.length ? `<figcaption>${inline(block.caption, block.id)}</figcaption>` : ''}</figure>`;
       }
       case 'table': return renderTable(block, attrs);
       case 'tableRow': return `<tr ${attrs}>${children()}</tr>`;

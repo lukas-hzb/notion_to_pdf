@@ -116,8 +116,14 @@ describe('Notion HTML semantics', () => {
   });
   it('preserves image widths and alignment without accepting arbitrary source styles', () => {
     const page = parseNotionHtml(html('<figure style="text-align:right"><img style="width:336px;background:url(https://example.com/track)" src="image.png"><figcaption>Caption</figcaption></figure>'), 'page.html');
-    expect(page.blocks[0]).toMatchObject({ imageWidth: 336, imageAlign: 'right', caption: [{ text: 'Caption' }] });
+    expect(page.blocks[0]).toMatchObject({ imageWidth: 336, imageWidthPercent: expect.closeTo(47.3239, 3), imageAlign: 'right', caption: [{ text: 'Caption' }] });
     expect(JSON.stringify(page.blocks)).not.toContain('track');
+  });
+  it('maps Notion editor image widths to the available PDF width but respects constrained containers', () => {
+    const page = parseNotionHtml(html('<figure><img style="width:710px" src="full.png"></figure><figure><img style="width:355px" src="half.png"></figure><div class="column-list"><div class="column" style="width:50%"><figure><img style="width:336px" src="column.png"></figure></div></div>'), 'images.html');
+    expect(page.blocks[0]).toMatchObject({ imageWidth: 710, imageWidthPercent: 100 });
+    expect(page.blocks[1]).toMatchObject({ imageWidth: 355, imageWidthPercent: 50 });
+    expect(page.blocks[2]?.children[0]?.children[0]).toMatchObject({ imageWidth: 336, imageWidthPercent: undefined });
   });
   it('keeps scientific scripts, property checkboxes and block equation attributes on paragraphs', () => {
     const page = parseNotionHtml(html('<p>H<sub>2</sub>O and x<sup>2</sup></p><table><tr><td><input type="checkbox" checked></td><td><span class="checkbox checkbox-off"></span></td></tr></table><p data-notion-equation="\\frac{a}{b}">presentation</p>'), 'page.html');
