@@ -62,20 +62,19 @@ h3 strong,
 h4 strong {
   font-weight: 600;
 }
-/* These level-specific values reproduce the visible block geometry of
-   Notion's A4 export at 12pt. rem units preserve the same rhythm when a
-   compact or larger exporter font size is selected. */
+/* These level-specific point values reproduce Notion's physical A4 spacing.
+   They deliberately stay constant when a preset changes the body font size. */
 h1 {
   font-size: 1.875em;
-  margin: 1.5rem 0 .72rem;
+  margin: 18pt 0 8.64pt;
 }
 h2 {
   font-size: 1.5em;
-  margin: 1.367rem 0 .666rem;
+  margin: 16.404pt 0 7.992pt;
 }
 h3 {
   font-size: 1.25em;
-  margin: 1.18rem 0 .548rem;
+  margin: 14.16pt 0 6.576pt;
 }
 h4 {
   font-size: 1.05em;
@@ -85,7 +84,7 @@ h4 {
   font-size: 2.5em;
   font-weight: 700;
   line-height: 1.1;
-  margin: -.196em 0 .91em;
+  margin: .2em 0 27.3pt;
   letter-spacing: -.01em;
 }
 .document-header {
@@ -676,9 +675,9 @@ sub {
   margin-bottom: 0;
 }
 [data-block-type="paragraph"], [data-block-type="list"] { --gap-before: var(--space-text); }
-h1[data-block-type="heading"] { --gap-before: 1.5rem; }
-h2[data-block-type="heading"] { --gap-before: 1.367rem; }
-h3[data-block-type="heading"] { --gap-before: 1.18rem; }
+h1[data-block-type="heading"] { --gap-before: 18pt; }
+h2[data-block-type="heading"] { --gap-before: 16.404pt; }
+h3[data-block-type="heading"] { --gap-before: 14.16pt; }
 h4[data-block-type="heading"] { --gap-before: 1.1rem; }
 [data-block-type="pageLink"] { --gap-before: .25rem; }
 [data-block-type="toggle"] { --gap-before: .65rem; }
@@ -686,9 +685,9 @@ h4[data-block-type="heading"] { --gap-before: 1.1rem; }
 [data-block-type="divider"] { --gap-before: var(--space-text); }
 [data-block-type="file"] { --gap-before: .65rem; }
 [data-block-type="bookmark"].bookmark-compact { --gap-before: .7rem; }
-.heading-media.heading-level-1 { --gap-before: 1.5rem; }
-.heading-media.heading-level-2 { --gap-before: 1.367rem; }
-.heading-media.heading-level-3 { --gap-before: 1.18rem; }
+.heading-media.heading-level-1 { --gap-before: 18pt; }
+.heading-media.heading-level-2 { --gap-before: 16.404pt; }
+.heading-media.heading-level-3 { --gap-before: 14.16pt; }
 .heading-media.heading-level-4 { --gap-before: 1.1rem; }
 .heading-media { break-inside: avoid; }
 .heading-media > .image-block img {
@@ -710,9 +709,9 @@ h4[data-block-type="heading"] { --gap-before: 1.1rem; }
 [data-block-type="heading"] + [data-block-type]:not(:where([data-block-type="divider"])) {
   --gap-before: var(--space-heading-content);
 }
-[data-block-type="heading"]:is(h1) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: .72rem; }
-[data-block-type="heading"]:is(h2) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: .666rem; }
-[data-block-type="heading"]:is(h3) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: .548rem; }
+[data-block-type="heading"]:is(h1) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: 8.64pt; }
+[data-block-type="heading"]:is(h2) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: 7.992pt; }
+[data-block-type="heading"]:is(h3) + [data-block-type]:not(:where([data-block-type="divider"], [data-block-type="heading"])) { --gap-before: 6.576pt; }
 [data-block-type="heading"] + [data-block-type="heading"] { --gap-before: .65rem; }
 .tab-title + [data-block-type] { --gap-before: var(--space-heading-content); }
 [data-block-type="list"] + [data-block-type="list"], li > [data-block-type="list"] {

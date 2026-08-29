@@ -102,7 +102,7 @@ unsuccessful batch removes its own incomplete directory.
 | :----- | :------ | :---- | :------ | :-------------------- |
 | `original` | Expanded with marker | Static checkboxes | Preserved | All records |
 | `reading` | Ordinary sections | Ordinary unstruck bullets | Preserved | Records with body content |
-| `print` | Ordinary sections | Ordinary unstruck bullets | Stacked | Records with body content |
+| `print` | Ordinary sections | Ordinary unstruck bullets | Preserved | Records with body content |
 
 Completed tasks converted to bullets are not greyed out or struck through.
 Use `--keep-task-status` to retain completion styling. Explicit source

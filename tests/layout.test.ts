@@ -59,6 +59,10 @@ describe('print transformations', () => {
   });
   it('stacks columns only when requested and keeps both contents', () => {
     const { page, snapshot } = setup();
+    const print = renderDocument(snapshot, page, presetOptions('print'), '').html;
+    expect(presetOptions('print').columns).toBe('preserve');
+    expect(print).toContain('minmax(0,60fr) minmax(0,40fr)');
+    expect(print).not.toContain('columns stacked');
     const { html } = renderDocument(snapshot, page, { ...defaultOptions, columns: 'stack' }, '');
     expect(html).toContain('columns stacked');
     expect(html).toContain('Hidden content');

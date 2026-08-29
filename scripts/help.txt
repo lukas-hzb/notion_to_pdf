@@ -36,8 +36,8 @@ stderr; the final JSON summary goes to stdout. External content images stay
 offline and produce warnings; bookmark previews are omitted with an info entry,
 preserving their text and links. Reading/print skip property-only records and
 list them in the report. Override with --database-pages all. The original
-profile includes all records and their properties. Reading preserves columns;
-reading/print use ordinary bullets without completion styling. Use
+profile includes all records and their properties. Reading/print preserve columns
+and use ordinary bullets without completion styling. Use
 --keep-task-status to retain it. Existing database tables remain unchanged by
 page filtering. Explicit strikethrough formatting in source text is preserved.
 Help, version, doctor, --list and --inspect-only do not start Electron.

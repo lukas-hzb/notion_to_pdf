@@ -24,6 +24,6 @@ export const defaultOptions: ExportOptions = optionsSchema.parse({});
 export function presetOptions(preset: ExportOptions['preset'], current = defaultOptions): ExportOptions {
   const common = { ...current, preset, preserveTaskStatus: true };
   if (preset === 'reading') return { ...common, toggles: 'sections', tasks: 'bullets', preserveTaskStatus: false, columns: 'preserve', fontSize: 11, databasePages: 'content' };
-  if (preset === 'print') return { ...common, toggles: 'sections', tasks: 'bullets', preserveTaskStatus: false, columns: 'stack', fontSize: 10, databasePages: 'content' };
+  if (preset === 'print') return { ...common, toggles: 'sections', tasks: 'bullets', preserveTaskStatus: false, columns: 'preserve', fontSize: 10, databasePages: 'content' };
   return { ...common, toggles: 'expanded', tasks: 'checkboxes', columns: 'preserve', fontSize: 11, databasePages: 'all' };
 }

@@ -72,7 +72,7 @@ async function readPdf(filename) {
   } finally { await task.destroy(); }
 }
 
-for (const preset of ['original', 'reading']) {
+for (const preset of ['original', 'reading', 'print']) {
   const result = await run(input, path.join(root, preset), ['--preset', preset, '--strict']);
   const report = JSON.parse(await readFile(path.join(result.directory, 'export-report.json'), 'utf8'));
   assert.equal(report.options.preserveTaskStatus, preset === 'original');

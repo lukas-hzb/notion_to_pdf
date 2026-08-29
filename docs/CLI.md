@@ -62,7 +62,7 @@ Presets establish defaults before individual options are applied.
 | Toggles | expanded | sections | sections |
 | Tasks | checkboxes | bullets | bullets |
 | Task status | retained | removed | removed |
-| Columns | preserved | preserved | stacked |
+| Columns | preserved | preserved | preserved |
 | Font size | 11 pt | 11 pt | 10 pt |
 | Database record pages | all | content only | content only |
 

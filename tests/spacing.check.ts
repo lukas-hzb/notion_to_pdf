@@ -7,39 +7,44 @@ import { printStyles } from '../src/rendering/pdf';
 import { presetOptions } from '../src/domain/options';
 import type { Snapshot } from '../src/domain/model';
 
+const rem = (value: number) => ({ value, unit: 'rem' as const });
+const pt = (value: number) => ({ value, unit: 'pt' as const });
+type Gap = ReturnType<typeof rem> | ReturnType<typeof pt>;
+const gapPixels = (gap: Gap, remSize: number) => gap.unit === 'rem' ? gap.value * remSize : gap.value * 4 / 3;
+
 const cases = [
-  ['paragraph', '<p>Paragraph</p>', .55, .55],
-  ['heading', '<h2>Heading</h2>', 1.367, .666],
-  ['heading1', '<h1>Heading one</h1>', 1.5, .72],
-  ['heading3', '<h3>Heading three</h3>', 1.18, .548],
-  ['heading4', '<h4>Heading four</h4>', 1.1, .5],
-  ['bullets', '<ul><li>First</li><li>Second</li></ul>', .55, .3],
-  ['numbers', '<ol><li>First</li><li>Second</li></ol>', .55, .3],
-  ['tasks', '<ul><li><input type="checkbox" checked>Task</li></ul>', .55, .3],
-  ['callout', '<aside><p>Notice</p></aside>', 1, 1],
-  ['quote', '<blockquote><p>Quotation</p></blockquote>', 1, 1],
-  ['code', '<pre><code>const value = 1;</code></pre>', 1, 1],
-  ['table', '<table><tr><th>Column</th></tr><tr><td><p>Value</p></td></tr></table>', 1, 1],
-  ['equation', '<div data-notion-equation="x^2+1"></div>', 1, 1],
-  ['image', '<figure><img src="pixel.png"><figcaption>Caption</figcaption></figure>', 1, 1],
-  ['reference', '<figure class="link-to-page"><a href="https://example.com/page">Page</a></figure>', .25, .25],
-  ['bookmark', '<figure><a class="bookmark" href="https://example.com"><div class="bookmark-title">Title</div><div class="bookmark-description">Description</div></a><figcaption>Caption</figcaption></figure>', 1, 1],
-  ['toggle', '<details><summary>Details</summary><p>Body</p></details>', .65, .65],
-  ['toggle-heading', '<details><summary><h2>Heading section</h2></summary><p>Body</p></details>', 1.5, .65],
-  ['columns', '<div class="column-list"><div class="column"><p>Left</p></div><div class="column"><p>Right</p></div></div>', 1, 1],
-  ['tab', '<details class="tab-page"><summary>Tab</summary><p>Body</p></details>', 1, 1],
-  ['divider', '<hr>', .55, .55],
-  ['file', '<figure><a href="https://example.com/file.pdf">Attachment</a></figure>', .65, .65],
-  ['media', '<video title="Video" src="https://example.com/video.mp4"></video>', 1, 1],
-  ['fallback', '<button>Unsupported control</button>', 1, 1],
+  ['paragraph', '<p>Paragraph</p>', rem(.55), rem(.55)],
+  ['heading', '<h2>Heading</h2>', pt(16.404), pt(7.992)],
+  ['heading1', '<h1>Heading one</h1>', pt(18), pt(8.64)],
+  ['heading3', '<h3>Heading three</h3>', pt(14.16), pt(6.576)],
+  ['heading4', '<h4>Heading four</h4>', rem(1.1), rem(.5)],
+  ['bullets', '<ul><li>First</li><li>Second</li></ul>', rem(.55), rem(.3)],
+  ['numbers', '<ol><li>First</li><li>Second</li></ol>', rem(.55), rem(.3)],
+  ['tasks', '<ul><li><input type="checkbox" checked>Task</li></ul>', rem(.55), rem(.3)],
+  ['callout', '<aside><p>Notice</p></aside>', rem(1), rem(1)],
+  ['quote', '<blockquote><p>Quotation</p></blockquote>', rem(1), rem(1)],
+  ['code', '<pre><code>const value = 1;</code></pre>', rem(1), rem(1)],
+  ['table', '<table><tr><th>Column</th></tr><tr><td><p>Value</p></td></tr></table>', rem(1), rem(1)],
+  ['equation', '<div data-notion-equation="x^2+1"></div>', rem(1), rem(1)],
+  ['image', '<figure><img src="pixel.png"><figcaption>Caption</figcaption></figure>', rem(1), rem(1)],
+  ['reference', '<figure class="link-to-page"><a href="https://example.com/page">Page</a></figure>', rem(.25), rem(.25)],
+  ['bookmark', '<figure><a class="bookmark" href="https://example.com"><div class="bookmark-title">Title</div><div class="bookmark-description">Description</div></a><figcaption>Caption</figcaption></figure>', rem(1), rem(1)],
+  ['toggle', '<details><summary>Details</summary><p>Body</p></details>', rem(.65), rem(.65)],
+  ['toggle-heading', '<details><summary><h2>Heading section</h2></summary><p>Body</p></details>', rem(1.5), rem(.65)],
+  ['columns', '<div class="column-list"><div class="column"><p>Left</p></div><div class="column"><p>Right</p></div></div>', rem(1), rem(1)],
+  ['tab', '<details class="tab-page"><summary>Tab</summary><p>Body</p></details>', rem(1), rem(1)],
+  ['divider', '<hr>', rem(.55), rem(.55)],
+  ['file', '<figure><a href="https://example.com/file.pdf">Attachment</a></figure>', rem(.65), rem(.65)],
+  ['media', '<video title="Video" src="https://example.com/video.mp4"></video>', rem(1), rem(1)],
+  ['fallback', '<button>Unsupported control</button>', rem(1), rem(1)],
 ] as const;
 const pairs = cases.flatMap((before, i) => cases.map((after, j) => {
   const lists = ['bullets', 'numbers', 'tasks'];
-  const headingAfter = before[0] === 'heading1' ? .72 : before[0] === 'heading' ? .666 : before[0] === 'heading3' ? .548 : .5;
-  const top = before[0].startsWith('heading') && after[0] !== 'divider' ? after[0].startsWith('heading') ? .65 : headingAfter
-    : lists.includes(before[0]) && lists.includes(after[0]) ? .3 : after[2];
-  const previous = before[0].startsWith('heading') ? .5 : before[3];
-  return { id: `pair-${i}-${j}`, before: before[0], after: after[0], expected: Math.max(previous, top),
+  const headingAfter = before[3];
+  const top = before[0].startsWith('heading') && after[0] !== 'divider' ? after[0].startsWith('heading') ? rem(.65) : headingAfter
+    : lists.includes(before[0]) && lists.includes(after[0]) ? rem(.3) : after[2];
+  const previous = before[0].startsWith('heading') ? rem(.5) : before[3];
+  return { id: `pair-${i}-${j}`, before: before[0], after: after[0], previous, top,
     html: `<div class="column-list"><div class="column" id="pair-${i}-${j}">${before[1]}${after[1]}</div></div>` };
 }));
 const symbol = '<div><img class="icon" src="https://app.notion.com/icons/exclamation-mark_gray.svg"></div>';
@@ -101,6 +106,7 @@ function measure() {
   return { rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
     bodyLineHeight: parseFloat(getComputedStyle(document.body).lineHeight),
     titleFontSize: parseFloat(titleStyle.fontSize), titleWeight: titleStyle.fontWeight,
+    titleMarginTop: parseFloat(titleStyle.marginTop), titleMarginBottom: parseFloat(titleStyle.marginBottom),
     titleLetterSpacing: parseFloat(titleStyle.letterSpacing), gaps, callouts, edgeErrors,
     detailsGap: parseFloat(getComputedStyle(details).marginTop),
     nestedItemGap: box(nested.children[1]!).top - box(nested.children[0]!).bottom,
@@ -130,11 +136,14 @@ async function main() {
       assert(Math.abs(result.bodyLineHeight - 1.5 * result.rem) < .1, 'Body line height must match Notion.');
       assert(Math.abs(result.titleFontSize - 2.5 * result.rem) < .1, 'Page title size must match Notion.');
       assert.equal(result.titleWeight, '700', 'Page title weight must match Notion.');
+      assert(Math.abs(result.titleMarginTop - .5 * result.rem) < .1, 'Page titles must leave enough top clearance for accents.');
+      assert(Math.abs(result.titleMarginBottom - 27.3 * 4 / 3) < .1, 'Page title spacing must remain at Notion size across presets.');
       assert(Math.abs(result.titleLetterSpacing + .025 * result.rem) < .1, 'Page title tracking must match Notion.');
       assert.equal(result.gaps.length, pairs.length);
       for (const pair of pairs) {
         const actual = result.gaps.find(gap => gap.id === pair.id)!.gap;
-        assert(Math.abs(actual - pair.expected * result.rem) < .8, `${options.preset}/${options.fontSize}: ${pair.before} -> ${pair.after}: ${actual.toFixed(2)}px, expected ${(pair.expected * result.rem).toFixed(2)}px`);
+        const expected = Math.max(gapPixels(pair.previous, result.rem), gapPixels(pair.top, result.rem));
+        assert(Math.abs(actual - expected) < .8, `${options.preset}/${options.fontSize}: ${pair.before} -> ${pair.after}: ${actual.toFixed(2)}px, expected ${expected.toFixed(2)}px`);
       }
       assert.equal(result.callouts.length, calloutBodies.length);
       for (const callout of result.callouts) {
