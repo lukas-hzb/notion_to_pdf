@@ -512,7 +512,6 @@ th {
   color: inherit;
 }
 .file-attachment {
-  /* File cards stay together; long bookmark metadata has its own .bookmark-card. */
   break-inside: avoid;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -520,17 +519,32 @@ th {
 .link-card-title {
   font-weight: 600;
   break-after: avoid;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.35;
+  max-height: 2.7em;
+  overflow: hidden;
 }
 .link-card-description {
   font-size: .86em;
   margin: .45em 0;
-  orphans: 3;
-  widows: 3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  line-height: 1.45;
+  max-height: 4.35em;
+  overflow: hidden;
 }
 .link-card-url {
   font-size: .72em;
   color: #77766f;
   margin-top: .6em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .bookmark-preview {
   max-height: 45mm;
@@ -568,7 +582,7 @@ sub {
   background: #f8f7f6;
   color: inherit;
   text-decoration: none;
-  break-inside: auto;
+  break-inside: avoid;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }

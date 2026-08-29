@@ -173,7 +173,7 @@ const titleY = pdf => pdf.items.find(item => item.text === 'COVERREGRESSION').y;
 assert(titleY(coverResults['no-cover']) > titleY(coverResults.cover) + 60, 'Removing the cover must reclaim its layout space.');
 console.log('PASS cover layout: cover/icon/title grouping, no-cover and print profiles, narrow landscape layout, six clickable page references, bounds.');
 const blocksFile = path.join(root, 'blocks.html');
-const description = Array.from({ length: 90 }, (_, i) => `DESCRIPTION${String(i).padStart(3, '0')}END This complete source paragraph must remain readable across page breaks. It may not be clipped, hidden or silently shortened.`).join('\n\n');
+const description = Array.from({ length: 90 }, (_, i) => `DESCRIPTION${String(i).padStart(3, '0')}END Website metadata remains in the importer but the PDF card shows only a useful preview.`).join('\n\n');
 const card = (id, description) => `<figure><a class="bookmark" href="https://example.com/${id}"><div class="bookmark-title">${id}</div><div class="bookmark-description">${description}</div><img class="bookmark-icon" src="cover.png"><img class="bookmark-image" src="cover.png"></a><figcaption><a href="https://example.org/caption">CAPTION${id}</a></figcaption></figure>`;
 await writeFile(blocksFile, `<article id="blocks"><h1 class="page-title">Link cards, media and tabs</h1><div class="page-body">${card('LOCALCARD', 'LOCALDESCRIPTION Complete bookmark metadata.')}<div class="column-list"><div class="column" style="width:30%">${card('NARROWCARD', 'NARROWDESCRIPTION Card in a small column.')}</div><div class="column" style="width:70%"><p>RIGHTCOLUMNCONTENT</p></div></div><figure><video title="VIDEOTITLE" poster="cover.png"><source src="https://example.com/lesson.mp4"></video><figcaption>VIDEOCAPTION</figcaption></figure><audio title="AUDIOTITLE"><source src="https://example.com/lesson.mp3"></audio><iframe title="EMBEDTITLE" src="https://example.com/widget"></iframe><details class="tab-page"><summary>TABONE</summary><p>TABONECONTENT</p></details><details class="tab-page"><summary>TABTWO</summary><p>TABTWOCONTENT</p></details><table><tr><td><p>CELLPARAGRAPHONE</p><p>CELLPARAGRAPHTWO</p><ul><li>CELLLISTITEM</li></ul></td></tr></table>${card('LONGCARD', description)}<p>BLOCKSDOCUMENTEND</p></div></article>`);
 for (const mode of ['card', 'compact']) {
@@ -185,14 +185,18 @@ for (const mode of ['card', 'compact']) {
   for (const marker of ['LOCALCARD', 'NARROWCARD', 'RIGHTCOLUMNCONTENT', 'VIDEOTITLE', 'VIDEOCAPTION', 'AUDIOTITLE', 'EMBEDTITLE', 'TABONECONTENT', 'TABTWOCONTENT', 'CELLPARAGRAPHONE', 'CELLPARAGRAPHTWO', 'CELLLISTITEM', 'CAPTIONLOCALCARD', 'CAPTIONLONGCARD', 'BLOCKSDOCUMENTEND']) assert(compact.includes(marker), `Missing block content in ${mode}: ${marker}`);
   assert(pdf.links >= 9, 'Card, caption and media targets must be clickable.');
   if (mode === 'card') {
-    for (let i = 0; i < 90; i++) assert(compact.includes(`DESCRIPTION${String(i).padStart(3, '0')}END`), `Clipped bookmark description ${i}`);
+    assert(compact.includes('DESCRIPTION000END'), 'Bookmark preview must retain its beginning.');
+    assert(!compact.includes('DESCRIPTION089END'), 'Bookmark preview must not paint the complete website description.');
+    const cardPage = pdf.items.find(item => item.text === 'LONGCARD')?.page;
+    const captionPage = pdf.items.find(item => item.text.includes('CAPTIONLONGCARD'))?.page;
+    assert(cardPage && cardPage === captionPage, 'A bounded bookmark card and its caption must stay together.');
     assert(pdf.images >= 7, 'Three thumbnails, three icons and the video poster must be embedded.');
   } else {
     assert(!compact.includes('DESCRIPTION000END'));
     assert.equal(report.issues.filter(issue => issue.code === 'bookmark-compacted').length, 3);
     assert.equal(pdf.images, 1, 'Compact bookmarks omit decoration but keep the video poster.');
   }
-  console.log(`PASS ${mode} bookmarks/media/tabs: ${pdf.pages} pages, local images, captions, source URLs, table structure and full-text checks.`);
+  console.log(`PASS ${mode} bookmarks/media/tabs: ${pdf.pages} pages, bounded previews, local images, captions, source URLs and table structure.`);
 }
 const spacingFile = path.join(root, 'spacing.html');
 const attachmentsFile = path.join(root, 'attachments.html');

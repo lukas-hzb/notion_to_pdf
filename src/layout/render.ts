@@ -4,6 +4,33 @@ import type { ExportOptions } from '../domain/options';
 
 export const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const esc = escapeHtml;
+const bookmarkPreviewCharacters = 280;
+
+function previewInline(items: Inline[], limit = bookmarkPreviewCharacters): Inline[] {
+  const result: Inline[] = [];
+  const sourceLength = items.reduce((sum, item) => sum + Array.from(item.text).length, 0);
+  let used = 0;
+  for (const item of items) {
+    if (used >= limit) break;
+    const characters = Array.from(item.text);
+    const available = limit - used;
+    if (characters.length <= available) {
+      result.push({ ...item });
+      used += characters.length;
+      continue;
+    }
+    const candidate = characters.slice(0, available).join('');
+    const boundary = candidate.search(/\s+\S*$/);
+    const text = (boundary >= Math.floor(available * .6) ? candidate.slice(0, boundary) : candidate).trimEnd();
+    result.push({ ...item, text: `${text}…`, equation: undefined });
+    return result;
+  }
+  if (sourceLength > limit) {
+    const last = result.at(-1);
+    if (last) last.text = `${last.text.trimEnd()}…`;
+  }
+  return result;
+}
 
 export function normalizeDisplayEquation(expression: string): string {
   // Notion accepts bare line breaks in a block equation. KaTeX recognizes the
@@ -195,7 +222,7 @@ export function renderDocument(snapshot: Snapshot, page: DocumentPage, options: 
         const preview = block.preview ? snapshot.assets[block.preview] : undefined;
         const symbol = icon(block);
         const name = block.href ? 'a' : 'div';
-        return `<section ${attrs} class="bookmark"><${name}${block.href ? ` href="${esc(block.href)}"` : ''} class="bookmark-card${preview ? ' has-preview' : ''}">${preview ? `<img class="bookmark-preview" src="${preview.dataUrl}" alt="">` : ''}<div class="bookmark-body">${symbol ? `<div class="bookmark-icon" aria-hidden="true">${symbol}</div>` : ''}<div class="link-card-title">${label}</div>${block.description?.length ? `<div class="link-card-description">${inline(block.description, block.id, false)}</div>` : ''}${block.href ? `<div class="link-card-url">${esc(block.href)}</div>` : ''}</div></${name}>${caption}</section>`;
+        return `<section ${attrs} class="bookmark"><${name}${block.href ? ` href="${esc(block.href)}"` : ''} class="bookmark-card${preview ? ' has-preview' : ''}">${preview ? `<img class="bookmark-preview" src="${preview.dataUrl}" alt="">` : ''}<div class="bookmark-body">${symbol ? `<div class="bookmark-icon" aria-hidden="true">${symbol}</div>` : ''}<div class="link-card-title">${label}</div>${block.description?.length ? `<div class="link-card-description">${inline(previewInline(block.description), block.id, false)}</div>` : ''}${block.href ? `<div class="link-card-url">${esc(block.href)}</div>` : ''}</div></${name}>${caption}</section>`;
       }
       case 'file': {
         const label = inline(block.content, block.id, false);

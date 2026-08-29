@@ -12,7 +12,7 @@ Layout:
   --font-size <pt>                   9–16 pt; default: 11
   --columns preserve|stack           Keep source widths or stack columns
   --tables split|wrap                Repeat title column (or first) in wide tables
-  --bookmarks card|compact           Full metadata cards, or title and URL only
+  --bookmarks card|compact           Bounded preview cards, or title and URL only
   --toggles expanded|sections        Open toggles or ordinary sections
   --tasks checkboxes|bullets         Static checkboxes or ordinary unstruck bullets
   --no-task-status                   Deliberately remove completion state
@@ -42,5 +42,5 @@ reading/print use ordinary bullets without completion styling. Use
 page filtering. Explicit strikethrough formatting in source text is preserved.
 Help, version, doctor, --list and --inspect-only do not start Electron.
 PDF conversion still needs Electron as its isolated Chromium print engine.
-Bookmark cards preserve local thumbnails/icons and complete descriptions.
+Bookmark cards preserve local thumbnails/icons and show a short description preview.
 --bookmarks compact deliberately omits description and decoration; captions stay.

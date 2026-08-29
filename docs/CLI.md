@@ -25,7 +25,7 @@ the command only prints help, a version, diagnostics, or a page list.
 | `--font-size` | `9`–`16` pt | `11` | Sets the base body size; spacing scales with it. |
 | `--columns` | `preserve`, `stack` | `preserve` | Keeps exported column widths or linearizes columns. |
 | `--tables` | `split`, `wrap` | `split` | Splits wide tables into groups or keeps one wrapping table. |
-| `--bookmarks` | `card`, `compact` | `card` | Keeps bookmark metadata or reduces the card to title and URL. |
+| `--bookmarks` | `card`, `compact` | `card` | Shows a bounded metadata preview or reduces the card to title and URL. |
 | `--toggles` | `expanded`, `sections` | `expanded` | Prints open toggle markers or converts toggles into sections. |
 | `--tasks` | `checkboxes`, `bullets` | `checkboxes` | Keeps static checkboxes or creates ordinary bullet points. |
 | `--no-task-status` | flag | off | Removes completion state from the chosen task representation. |

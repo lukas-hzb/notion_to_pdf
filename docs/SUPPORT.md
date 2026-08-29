@@ -118,7 +118,7 @@ or content combination.
 | Syntax highlighting | ◐ | Source remains readable, but token colors are not reconstructed. |
 | Mermaid code | ↻ | Printed as source code; diagrams are not executed. |
 | Plain link | ✅ | Gray underlined clickable text. Safe bare URLs in Notion's link wrapper are recovered. |
-| Bookmark | ✅ | Clickable metadata card with supplied title, description, URL, local thumbnail, icon, and caption. |
+| Bookmark | ✅ | Clickable card with supplied title, a bounded three-line description preview, URL, local thumbnail, icon, and caption. Complete supplied metadata remains in the import model. |
 | Compact bookmark | ✅ | Optional title-and-URL representation; intentionally omitted metadata is reported. |
 | Link preview | ↻ | Static bookmark or link representation; live preview refresh is unavailable. |
 | Audio | ↻ | Static media card with supplied title, source link, and caption. No playback. |

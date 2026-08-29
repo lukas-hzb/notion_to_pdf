@@ -198,6 +198,16 @@ describe('print transformations', () => {
     expect(compact.html).toContain('Caption'); expect(compact.html).not.toContain('data:image');
     expect(compact.issues.map(issue => issue.code)).toContain('bookmark-compacted');
   });
+  it('renders bookmark descriptions as bounded previews while retaining imported metadata', () => {
+    const description = `Preview start ${'complete website metadata '.repeat(30)}PREVIEWTAIL`;
+    const page = parseNotionHtml(`<article><figure><a class="bookmark" href="https://example.com/article"><div class="bookmark-title">A useful article</div><div class="bookmark-description">${description}</div></a></figure></article>`, 'preview.html');
+    const snapshot: Snapshot = { version: 1, id: 'snapshot', importedAt: '', name: 'test', pages: [page], assets: {}, issues: [] };
+    expect(page.blocks[0]?.description?.map(item => item.text).join('')).toContain('PREVIEWTAIL');
+    const { html } = renderDocument(snapshot, page, defaultOptions, '');
+    expect(html).toContain('Preview start');
+    expect(html).toContain('…');
+    expect(html).not.toContain('PREVIEWTAIL');
+  });
   it('renders file attachments as compact unboxed rows without invented labels', () => {
     const { snapshot } = setup();
     const page = parseNotionHtml('<article><figure><div class="source"><a href="https://example.com/notes.pdf">notes.pdf</a></div></figure></article>', 'files.html');
