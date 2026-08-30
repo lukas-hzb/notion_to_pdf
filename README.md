@@ -45,12 +45,13 @@ and full Notion or cross-platform parity has not been established.
 
 ## Output examples
 
-These screenshots come from the synthetic [Field Notes example](examples/field-notes),
-not from a private Notion workspace.
+These screenshots show selected real-world exports from personal study notes.
+Only the bounded previews are included; the source documents are not part of
+the repository.
 
-| Original profile | Reading profile |
-| :--------------: | :-------------: |
-| <img src="docs/images/original-framed.png" alt="Framed PDF preview preserving columns, toggle markers, and static task checkboxes" width="500" /> | <img src="docs/images/reading-framed.png" alt="Framed PDF preview preserving columns while converting toggles to sections and tasks to ordinary bullets" width="500" /> |
+| Continuous overview | Paginated reading profile |
+| :-----------------: | :-----------------------: |
+| <img src="docs/images/learning-overview-framed.png" alt="Framed continuous PDF preview with a page cover, bookmark icon, Notion callout, and page links" width="500" /> | <img src="docs/images/psychology-reading-framed.png" alt="Framed paginated PDF preview with headings, nested lists, a purple Notion callout, and a centered page number" width="500" /> |
 
 ## Installation
 

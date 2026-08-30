@@ -1,11 +1,15 @@
 # Documentation images
 
-The images in this directory are generated from the synthetic
-[`examples/field-notes`](../../examples/field-notes) fixture. They contain no
-private Notion workspace data.
+The images in this directory are selected from real-world study-note exports
+with the author's permission. Only bounded preview screenshots are committed;
+the complete PDFs, source ZIPs, and other workspace data are not included.
 
-`original.png` and `reading.png` are the unmodified PDF page renders. Their
-matching `*-framed.png` files place those renders in a neutral GitHub
+`learning-overview-framed.png` shows a continuous overview with a page cover,
+icon, callout, and page links. `psychology-reading-framed.png` shows the first
+A4 page of the converter's paginated reading profile, including a centered page
+number.
+
+Both screenshots place an unmodified PDF render in the same neutral GitHub
 presentation frame with a rounded page edge, subtle border, and restrained
 shadow. The frame must never redraw or reinterpret document content.
 
