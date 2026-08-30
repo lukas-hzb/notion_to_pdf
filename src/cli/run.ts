@@ -14,7 +14,6 @@ export async function runCli(root: string, args: string[], signal?: AbortSignal,
     paper: { type: 'string' }, margin: { type: 'string' }, 'font-size': { type: 'string' },
     toggles: { type: 'string' }, tasks: { type: 'string' }, 'no-task-status': { type: 'boolean' }, 'keep-task-status': { type: 'boolean' },
     continuous: { type: 'boolean' }, 'no-page-numbers': { type: 'boolean' }, 'no-cover': { type: 'boolean' },
-    'fetch-notion-covers': { type: 'boolean' },
     'page-index': { type: 'string', multiple: true }, 'inspect-only': { type: 'boolean' }, list: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   } });
@@ -38,7 +37,7 @@ export async function runCli(root: string, args: string[], signal?: AbortSignal,
     ...(values.continuous ? { continuousPage: true } : {}),
     ...(values['no-page-numbers'] ? { pageNumbers: false } : {}), ...(values['no-cover'] ? { includeCover: false } : {}),
   });
-  const snapshot = await importNotion(values.input, signal, { fetchNotionCovers: Boolean(values['fetch-notion-covers'] && options.includeCover) });
+  const snapshot = await importNotion(values.input, signal);
   if (values.list) {
     console.log(JSON.stringify(summarize(snapshot).pages.map((page, index) => ({ index, id: page.id, title: page.title, hasBodyContent: page.hasBodyContent, propertyCount: page.propertyCount, issues: page.issues.length })), null, 2));
     return;

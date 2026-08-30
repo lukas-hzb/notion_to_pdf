@@ -1,6 +1,5 @@
 import path from 'node:path';
 import convertHeic from 'heic-convert';
-import { limits } from './files';
 
 export interface NormalizedImage {
   bytes: Buffer;
@@ -12,68 +11,6 @@ export class ImageImportError extends Error {
     super(message);
     this.name = 'ImageImportError';
   }
-}
-
-const officialNotionCoverHosts = new Set(['app.notion.com', 'www.notion.so']);
-
-export function officialNotionCoverUrl(reference: string): URL | undefined {
-  try {
-    const url = new URL(reference);
-    if (
-      url.protocol !== 'https:' || url.port || url.username || url.password || url.search || url.hash
-      || !officialNotionCoverHosts.has(url.hostname)
-      || !url.pathname.startsWith('/images/page-cover/')
-      || /%(?:2f|5c)/i.test(reference)
-    ) return undefined;
-    return url;
-  } catch {
-    return undefined;
-  }
-}
-
-export async function fetchOfficialNotionCover(reference: string, signal?: AbortSignal): Promise<NormalizedImage> {
-  const url = officialNotionCoverUrl(reference);
-  if (!url) throw new ImageImportError('external-image', 'Der externe Bildverweis ist kein freigegebenes offizielles Notion-Cover.');
-  const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(15_000)]) : AbortSignal.timeout(15_000);
-  let response: Response;
-  try {
-    response = await fetch(url, { redirect: 'error', signal: requestSignal, headers: { accept: 'image/png,image/jpeg,image/gif,image/webp,image/heic,image/heif' } });
-  } catch {
-    signal?.throwIfAborted();
-    throw new ImageImportError('notion-cover-fetch-failed', 'Das offizielle Notion-Cover konnte nicht innerhalb des Zeitlimits geladen werden.');
-  }
-  if (!response.ok || !response.body) {
-    await response.body?.cancel();
-    throw new ImageImportError('notion-cover-fetch-failed', `Das offizielle Notion-Cover konnte nicht geladen werden (HTTP ${response.status}).`);
-  }
-  const declaredSize = Number(response.headers.get('content-length'));
-  if (Number.isFinite(declaredSize) && declaredSize > limits.fileBytes) {
-    await response.body.cancel();
-    throw new ImageImportError('image-too-large', `Das offizielle Notion-Cover überschreitet das Größenlimit von ${Math.floor(limits.fileBytes / 1024 / 1024)} MB.`);
-  }
-  const reader = response.body.getReader();
-  const chunks: Buffer[] = [];
-  let size = 0;
-  try {
-    while (true) {
-      signal?.throwIfAborted();
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > limits.fileBytes) {
-        await reader.cancel();
-        throw new ImageImportError('image-too-large', `Das offizielle Notion-Cover überschreitet das Größenlimit von ${Math.floor(limits.fileBytes / 1024 / 1024)} MB.`);
-      }
-      chunks.push(Buffer.from(value));
-    }
-  } catch (error) {
-    signal?.throwIfAborted();
-    if (error instanceof ImageImportError) throw error;
-    throw new ImageImportError('notion-cover-fetch-failed', 'Das offizielle Notion-Cover konnte nicht vollständig geladen werden.');
-  } finally {
-    reader.releaseLock();
-  }
-  return normalizeImage(Buffer.concat(chunks), path.basename(url.pathname));
 }
 
 export function imageMime(data: Buffer): NormalizedImage['mime'] | undefined {

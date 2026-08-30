@@ -3,14 +3,10 @@ import { createHash } from 'node:crypto';
 import { lstat } from 'node:fs/promises';
 import { openSource, readBounded, limits, within } from './files';
 import { parseNotionHtml } from './html';
-import { fetchOfficialNotionCover, ImageImportError, normalizeImage, officialNotionCoverUrl } from './images';
+import { ImageImportError, normalizeImage } from './images';
 import type { Asset, Block, DocumentPage, Inline, Issue, Snapshot } from '../domain/model';
 
-export { imageMime, isHeic, officialNotionCoverUrl } from './images';
-
-export interface ImportOptions {
-  fetchNotionCovers?: boolean;
-}
+export { imageMime, isHeic } from './images';
 
 function localReference(root: string, from: string, reference: string): string | undefined {
   if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(reference)) return undefined;
@@ -22,7 +18,7 @@ function localReference(root: string, from: string, reference: string): string |
   } catch { return undefined; }
 }
 
-export async function importNotion(source: string, signal?: AbortSignal, options: ImportOptions = {}): Promise<Snapshot> {
+export async function importNotion(source: string, signal?: AbortSignal): Promise<Snapshot> {
   const opened = await openSource(source, signal);
   try {
     const pages: DocumentPage[] = [];
@@ -47,7 +43,7 @@ export async function importNotion(source: string, signal?: AbortSignal, options
     for (const page of pages) {
       signal?.throwIfAborted();
       const full = path.resolve(opened.root, page.sourcePath);
-      const issue = (code: string, message: string, blockId?: string, severity: Issue['severity'] = 'warning') => page.issues.push({ code, message, pageId: page.id, blockId, severity });
+      const issue = (code: string, message: string, blockId?: string) => page.issues.push({ code, message, pageId: page.id, blockId, severity: 'warning' });
       const storeImage = (normalized: Awaited<ReturnType<typeof normalizeImage>>, cacheKey: string, fail: (code: string, message: string) => undefined): string | undefined => {
         if (normalized.bytes.length > limits.fileBytes) return fail('image-too-large', `Das für die PDF aufbereitete Bild überschreitet das Größenlimit von ${Math.floor(limits.fileBytes / 1024 / 1024)} MB.`);
         const assetId = createHash('sha256').update(normalized.bytes).digest('hex');
@@ -59,30 +55,9 @@ export async function importNotion(source: string, signal?: AbortSignal, options
         assetCache.set(cacheKey, { assetId });
         return assetId;
       };
-      const loadImage = async (reference: string | undefined, blockId?: string, allowNotionCover = false): Promise<string | undefined> => {
+      const loadImage = async (reference: string | undefined, blockId?: string): Promise<string | undefined> => {
         if (!reference) { issue('missing-image', 'Ein Bild hat keine lokale Quelldatei.', blockId); return undefined; }
         if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(reference)) {
-          if (allowNotionCover && options.fetchNotionCovers && officialNotionCoverUrl(reference)) {
-            const cached = assetCache.get(reference);
-            if (cached) {
-              if ('failure' in cached) { issue(cached.failure.code, cached.failure.message, blockId); return undefined; }
-              return cached.assetId;
-            }
-            const fail = (code: string, message: string) => {
-              assetCache.set(reference, { failure: { code, message } });
-              issue(code, message, blockId);
-              return undefined;
-            };
-            try {
-              const assetId = storeImage(await fetchOfficialNotionCover(reference, signal), reference, fail);
-              if (assetId) issue('notion-cover-fetched', 'Das offizielle Notion-Cover wurde auf ausdrückliche Anforderung geladen und lokal in die PDF eingebettet.', blockId, 'info');
-              return assetId;
-            } catch (error) {
-              signal?.throwIfAborted();
-              if (error instanceof ImageImportError) return fail(error.code, error.message);
-              return fail('notion-cover-fetch-failed', 'Das offizielle Notion-Cover konnte nicht sicher geladen werden.');
-            }
-          }
           issue('external-image', 'Ein externes Bild wurde nicht geladen. Der Import arbeitet offline.', blockId);
           return undefined;
         }
@@ -160,7 +135,7 @@ export async function importNotion(source: string, signal?: AbortSignal, options
           await visit(block.children);
         }
       };
-      if (page.cover) page.cover = await loadImage(page.cover, undefined, true);
+      if (page.cover) page.cover = await loadImage(page.cover);
       if (page.iconSrc) page.iconSrc = await loadImage(page.iconSrc);
       await visit(page.blocks);
       await visit(page.properties ?? []);

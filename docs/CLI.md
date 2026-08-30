@@ -33,7 +33,6 @@ the command only prints help, a version, diagnostics, or a page list.
 | `--no-page-numbers` | flag | off | Hides footer page numbers. |
 | `--continuous` | flag | off | Renders every document as one dynamically sized page and disables the footer. |
 | `--no-cover` | flag | off | Omits the page cover and its reserved space. Covers are otherwise retained in every preset. |
-| `--fetch-notion-covers` | flag | off | Fetches built-in covers referenced under fixed official Notion page-cover URLs. |
 
 Explicit source strikethrough remains visible regardless of task settings.
 Bullet mode removes completion styling by default; `--keep-task-status` opts
@@ -92,20 +91,6 @@ The continuous mode keeps the selected paper width, determines the height from
 the rendered content, and always suppresses the page-number footer. A document
 may be up to 20,000 mm high; larger documents fail explicitly instead of being
 silently split or reduced.
-
-Fetch an official Notion cover that was referenced but not embedded in the
-HTML export:
-
-```sh
-npm run export -- \
-  --input "/path/to/notion-export.zip" \
-  --out "./output" \
-  --fetch-notion-covers
-```
-
-The option permits only direct HTTPS responses from fixed Notion hosts under
-`/images/page-cover/`. Redirects, URL credentials, query strings, arbitrary
-remote images, and responses over the normal image-size limit are rejected.
 
 Keep every database record while using reading layout:
 
@@ -181,15 +166,13 @@ application window.
 
 ## Offline behavior
 
-Conversion does not fetch remote assets by default. Local supported raster
-images and bookmark decoration are embedded; external content images produce
-warnings and external bookmark thumbnails or icons are omitted while retaining
-supplied text and links. `--fetch-notion-covers` is the only network exception
-and is restricted to built-in official Notion covers. HEIC/HEIF images are
-converted locally to JPEG without changing the source. The report distinguishes
-missing files, unsupported formats, failed HEIC conversion, cover-fetch
-failures, unsafe references, size limits, and PDF decoding failures. Use the
-report to identify every omission.
+Conversion does not fetch remote assets. Local supported raster images and
+bookmark decoration are embedded; external content images produce warnings and
+external bookmark thumbnails or icons are omitted while retaining supplied text
+and links. HEIC/HEIF images are converted locally to JPEG without changing the
+source. The report distinguishes missing files, unsupported formats, failed
+HEIC conversion, unsafe references, size limits, and PDF decoding failures. Use
+the report to identify every omission.
 
 ## Related documentation
 

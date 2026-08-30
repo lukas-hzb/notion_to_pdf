@@ -72,7 +72,7 @@ Notion HTML exports wrap file anchors in a padded `.source` figure, but the supp
 
 Wide, rectangular tables are partitioned into groups based on physical page width and font size. The title property is repeated when its exported icon is recognized; otherwise the first column is repeated. Content lengths guide column widths within each partition. Merged/irregular cells use the unsplit fallback with a warning. This is a heuristic and still requires visual review for unusual tables.
 
-Print styles embed Latin Inter and JetBrains Mono fonts and KaTeX font assets. No source stylesheets, JavaScript or remote fonts are executed or fetched. Only three recognized Notion property icons are redrawn from fixed local paths; arbitrary SVG is not trusted. The importer remains offline unless `--fetch-notion-covers` is set. That exception accepts only direct HTTPS responses from fixed official Notion hosts under `/images/page-cover/`, applies the normal image byte limits and signature checks, and rejects redirects and arbitrary remote URLs before Chromium sees the document.
+Print styles embed Latin Inter and JetBrains Mono fonts and KaTeX font assets. No source stylesheets, JavaScript or remote fonts are executed or fetched. Only three recognized Notion property icons are redrawn from fixed local paths; arbitrary SVG is not trusted.
 
 ## Verification
 
