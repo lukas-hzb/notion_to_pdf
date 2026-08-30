@@ -18,7 +18,9 @@ Layout:
   --no-task-status                   Deliberately remove completion state
   --keep-task-status                 Retain completion styling even in bullet mode
   --no-page-numbers                  Hide page numbers
+  --continuous                       Render each document as one long page without a footer
   --no-cover                         Omit the page cover
+  --fetch-notion-covers              Fetch official built-in Notion covers (opt-in network access)
 
 Selection and checks:
   --database-pages all|content       All records, or only records with body content
@@ -33,7 +35,8 @@ Selection and checks:
 Each export creates a new Notion-PDF-* folder with separate PDFs and an
 export-report.json. Original files are never modified. Progress goes to
 stderr; the final JSON summary goes to stdout. External content images stay
-offline and produce warnings; bookmark previews are omitted with an info entry,
+offline and produce warnings; --fetch-notion-covers only permits official
+Notion page-cover URLs. Bookmark previews are omitted with an info entry,
 preserving their text and links. Reading/print skip property-only records and
 list them in the report. Override with --database-pages all. The original
 profile includes all records and their properties. Reading/print preserve columns

@@ -122,6 +122,10 @@ describe('print transformations', () => {
     expect(() => optionsSchema.parse({ fontSize: 0 })).toThrow();
     expect(() => optionsSchema.parse({ arbitraryScript: 'evil' })).toThrow();
     expect(optionsSchema.parse({}).paper).toBe('A4');
+    expect(optionsSchema.parse({}).continuousPage).toBe(false);
+    expect(optionsSchema.parse({ continuousPage: true, pageNumbers: true }).pageNumbers).toBe(false);
+    const { page, snapshot } = setup();
+    expect(renderDocument(snapshot, page, { ...defaultOptions, continuousPage: true, pageNumbers: false }, '').html).toContain('continuous-page');
   });
   it('splits wide tables, repeats the key column, and preserves every cell without duplicate IDs', () => {
     const { snapshot } = setup();

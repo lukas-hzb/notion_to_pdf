@@ -8,6 +8,7 @@ import type { ExportOptions } from '../domain/options';
 import type { PdfResult } from '../domain/results';
 
 let styleCache: string | undefined;
+const maximumContinuousHeightMm = 20_000;
 export async function printStyles(root: string): Promise<string> {
   if (styleCache) return styleCache;
   let css = await readFile(path.join(root, 'dist/print.css'), 'utf8');
@@ -57,22 +58,31 @@ export async function renderPdf(root: string, snapshot: Snapshot, page: Document
     await win.loadURL(url);
     const findings = await win.webContents.executeJavaScript(`(async()=>{
       await document.fonts.ready;
-      const badImages=[];
-      await Promise.all(Array.from(document.images).map(async image=>{try{await image.decode();if(image.naturalWidth*image.naturalHeight>40000000)badImages.push(image.closest('[data-block]')?.id||'');}catch{badImages.push(image.closest('[data-block]')?.id||'');}}));
+      const badImages=[],oversizedImages=[];
+      await Promise.all(Array.from(document.images).map(async image=>{try{await image.decode();const id=image.closest('[data-block]')?.id||'';if(image.naturalWidth*image.naturalHeight>40000000)oversizedImages.push(id);}catch{badImages.push(image.closest('[data-block]')?.id||'');}}));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       const right=document.body.getBoundingClientRect().right;
       const overflow=Array.from(document.querySelectorAll('[data-block]')).filter(el=>el.getBoundingClientRect().right>right+2||el.scrollWidth>el.clientWidth+3).map(el=>el.id);
-      return {badImages,overflow:[...new Set(overflow)].slice(0,40)};
-    })()` ) as { badImages: string[]; overflow: string[] };
+      const article=document.querySelector('article');
+      return {badImages,oversizedImages,contentHeight:Math.ceil(article?.getBoundingClientRect().height||0),overflow:[...new Set(overflow)].slice(0,40)};
+    })()` ) as { badImages: string[]; oversizedImages: string[]; contentHeight: number; overflow: string[] };
     signal?.throwIfAborted();
     const issues: Issue[] = [...rendered.issues];
-    for (const blockId of findings.badImages) issues.push({ code: 'image-decode', severity: 'error', pageId: page.id, blockId, message: 'Ein Bild konnte nicht sicher dargestellt werden.' });
+    for (const blockId of findings.badImages) issues.push({ code: 'image-decode', severity: 'error', pageId: page.id, blockId, message: 'Ein eingebettetes Bild konnte von der PDF-Engine nicht dekodiert werden.' });
+    for (const blockId of findings.oversizedImages) issues.push({ code: 'image-dimensions-too-large', severity: 'error', pageId: page.id, blockId, message: 'Ein Bild überschreitet das sichere Limit von 40 Megapixeln.' });
     for (const blockId of findings.overflow) issues.push({ code: 'layout-overflow', severity: 'warning', pageId: page.id, blockId, message: 'Dieser Block ist breiter als der verfügbare Platz. Querformat oder einspaltige Ausgabe prüfen.' });
     if (issues.some(issue => issue.severity === 'error') || (options.strict && issues.some(issue => issue.severity !== 'info'))) throw new Error('Das Layout enthält ungelöste Probleme. Bitte die Darstellung anpassen oder den strengen Modus deaktivieren.');
+    if (options.continuousPage) {
+      const paper = options.paper === 'A4' ? [210, 297] : [215.9, 279.4];
+      const widthMm = options.landscape ? paper[1]! : paper[0]!;
+      const heightMm = Math.ceil(findings.contentHeight / 96 * 25.4 + options.margin * 2 + 4);
+      if (heightMm > maximumContinuousHeightMm) throw new Error(`Die kontinuierliche Seite wäre ${heightMm} mm hoch und überschreitet das Anwendungslimit von ${maximumContinuousHeightMm} mm.`);
+      await win.webContents.executeJavaScript(`(()=>{const style=document.createElement('style');style.textContent='@page{size:${widthMm}mm ${heightMm}mm;margin:${options.margin}mm}';document.head.append(style)})()`);
+    }
     const buffer = await win.webContents.printToPDF({
       printBackground: true, preferCSSPageSize: true,
       generateTaggedPDF: true, generateDocumentOutline: true,
-      displayHeaderFooter: options.pageNumbers,
+      displayHeaderFooter: options.pageNumbers && !options.continuousPage,
       headerTemplate: '<span></span>',
       footerTemplate: `<div style="width:100%;text-align:center;font-size:8px;font-family:Arial;color:#8b8b85"><span class="pageNumber"></span> / <span class="totalPages"></span></div>`,
     });
@@ -82,6 +92,7 @@ export async function renderPdf(root: string, snapshot: Snapshot, page: Document
     try {
       const pdf = await task.promise;
       if (!pdf.numPages) throw new Error('Die erzeugte PDF-Datei enthält keine Seiten.');
+      if (options.continuousPage && pdf.numPages !== 1) throw new Error(`Die kontinuierliche Ausgabe wurde unerwartet auf ${pdf.numPages} PDF-Seiten verteilt.`);
       const first = await pdf.getPage(1);
       const content = await first.getTextContent();
       if (!content.items.length) issues.push({ code: 'pdf-text-empty', severity: 'warning', pageId: page.id, message: 'Die erste PDF-Seite enthält keinen auswählbaren Text.' });

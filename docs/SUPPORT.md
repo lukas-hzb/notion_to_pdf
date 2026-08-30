@@ -40,14 +40,15 @@ or content combination.
 | Page title | ✅ | Large document heading with controlled wrapping. |
 | Emoji page icon | ✅ | Printed above the title or overlapping the cover edge. Appearance depends on available glyphs. |
 | Native Notion icon | ◐ | Known symbols have safe local vectors; unknown remote or SVG icons fall back visibly. |
-| Custom raster icon | ✅ | Local PNG, JPEG, GIF, or WebP is embedded. |
-| Cover | ✅ | Local raster cover is cropped into a full-width banner. |
+| Custom raster icon | ✅ | Local PNG, JPEG, GIF, WebP, or HEIC/HEIF is embedded. HEIC/HEIF is converted to JPEG. |
+| Cover | ✅ | Local raster covers are cropped into a full-width banner; official URL-only Notion covers can be fetched explicitly with `--fetch-notion-covers`. |
 | Cover positioning | ◐ | Uses a fixed print crop; Notion's responsive browser crop cannot be reproduced exactly. |
 | Default font | ✅ | Inter is embedded locally. |
 | Serif page | ◐ | Export class is recognized and mapped to a serif stack; platform metrics may differ. |
 | Mono page | ✅ | JetBrains Mono is embedded locally. |
 | Small text | ◐ | Reproducible through `--font-size`; not every export exposes the original page setting. |
 | Full width | ↻ | Represented through paper, orientation, and margin options. |
+| Continuous page | ✅ | Optional screen-oriented output uses one dynamically sized PDF page per document, without a footer. The application limit is 20,000 mm per document. |
 | Page properties | ✅ | Printed as a compact property table before page content. |
 | Page description | ◐ | Retained only when present as exported page content. |
 | Backlinks | — | Workspace relationships are unavailable in a normal HTML export. |
@@ -110,9 +111,9 @@ or content combination.
 
 | Block | Status | PDF representation or limitation |
 | :---- | :----: | :------------------------------- |
-| Local PNG/JPEG/GIF/WebP image | ✅ | Embedded proportionally with Notion's editor width mapped to the PDF column, centered alignment, and caption. GIF animation becomes a static frame. |
+| Local PNG/JPEG/GIF/WebP/HEIC/HEIF image | ✅ | Embedded proportionally with Notion's editor width mapped to the PDF column, centered alignment, and caption. HEIC/HEIF is converted locally to JPEG; GIF animation becomes a static frame. |
 | SVG content image | — | Arbitrary SVG is not executed or embedded; safe rasterization is not implemented. |
-| Remote image | ◐ | Not downloaded; a visible fallback and warning are produced. |
+| Remote image | ◐ | Arbitrary remote images are not downloaded; a visible fallback and warning are produced. Official Notion page covers are the explicit, restricted exception described above. |
 | Display equation | ✅ | Centered local KaTeX rendering, including bare Notion multiline expressions, with source fallback on failure. |
 | Code | ✅ | Escaped monospace block with preserved indentation and language label. |
 | Syntax highlighting | ◐ | Source remains readable, but token colors are not reconstructed. |
@@ -197,7 +198,9 @@ necessarily disappear.
 
 - Source scripts, iframes, forms, audio/video players, and arbitrary SVG DOMs
   are never executed.
-- Remote resources are not fetched silently.
+- Remote resources are not fetched silently. Official URL-only Notion covers
+  require the explicit `--fetch-notion-covers` option; all other remote images
+  remain blocked.
 - Links are validated; active protocols, embedded credentials, and control
   characters are rejected.
 - Regular, italic, bold, bold-italic, and monospace text use deliberate font
@@ -215,8 +218,8 @@ accessibility conformance, or complete recognition of future Notion markup.
    generated output.
 2. Add static contents and breadcrumb renderers with meaningful PDF targets.
 3. Improve property chips, people, place values, and tables in narrow columns.
-4. Add safe opt-in SVG rasterization and remote-asset retrieval only with
-   explicit URL, redirect, type, and size controls.
+4. Add safe opt-in SVG rasterization and consider broader remote-asset
+   retrieval only with explicit URL, redirect, type, and size controls.
 5. Validate the complete PDF pipeline on Windows and Linux.
 
 When Notion changes its exports, review this file together with the document

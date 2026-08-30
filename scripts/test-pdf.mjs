@@ -59,7 +59,7 @@ async function readPdf(filename) {
       for (const item of content.items) {
         if (!('str' in item)) continue;
         text += item.str + ' ';
-        items.push({ text: item.str, x: item.transform[4], y: item.transform[5], page: index, font: item.fontName });
+        items.push({ text: item.str, x: item.transform[4], y: item.transform[5], width: item.width, pageWidth: viewport.width, page: index, font: item.fontName });
         assert(item.transform[4] >= -2 && item.transform[4] + item.width <= viewport.width + 2, `Text outside page width: ${item.str.slice(0, 50)}`);
         assert(item.transform[5] >= -2 && item.transform[5] <= viewport.height + 2, `Text outside page height: ${item.str.slice(0, 50)}`);
       }
@@ -86,8 +86,25 @@ for (const preset of ['original', 'reading', 'print']) {
   const leftFirst = pdf.items.find(item => item.text.includes('LEFT000'));
   const rightFirst = pdf.items.find(item => item.text.includes('RIGHT000'));
   assert(leftFirst && rightFirst && leftFirst.page === rightFirst.page && rightFirst.x > leftFirst.x + 100, 'Columns must stay side by side.');
+  for (let pageNumber = 1; pageNumber <= pdf.pages; pageNumber++) {
+    const footer = pdf.items.filter(item => item.page === pageNumber && item.y < 30);
+    const position = footer.find(item => new RegExp(`^${pageNumber}\\s*/\\s*${pdf.pages}$`).test(item.text.trim()));
+    assert(position, `Missing page position in footer on page ${pageNumber}.`);
+    assert(Math.abs(position.x + position.width / 2 - position.pageWidth / 2) < 1, `Page position is not centered on page ${pageNumber}.`);
+  }
   console.log(`PASS ${preset}: ${pdf.pages} pages, ${sentinels.length + 2} content markers, ${pdf.links} links, bounds checked.`);
 }
+const continuous = await run(input, path.join(root, 'continuous'), ['--preset', 'reading', '--continuous', '--strict']);
+const continuousReport = JSON.parse(await readFile(path.join(continuous.directory, 'export-report.json'), 'utf8'));
+const continuousPdf = await readPdf(path.join(continuous.directory, continuousReport.files[0]));
+const continuousText = continuousPdf.text.replace(/\s+/g, '');
+assert.equal(continuousReport.options.continuousPage, true);
+assert.equal(continuousReport.options.pageNumbers, false);
+assert.equal(continuousPdf.pages, 1);
+assert(continuousPdf.items[0].pageWidth > 590, 'Continuous output must retain normal A4 reading width.');
+for (const sentinel of [...sentinels, 'TOGGLECONTENTVISIBLE', 'COMPLETEDTASKVISIBLE']) assert(continuousText.includes(sentinel), `Missing continuous content: ${sentinel}`);
+assert(!continuousPdf.items.some(item => item.y < 30 && /^1\s*\/\s*1$/.test(item.text.trim())), 'Continuous output must not contain a page footer.');
+console.log('PASS continuous: one long page, all content retained, normal reading width and no footer.');
 const sample = await run(path.resolve('examples/field-notes'), path.join(root, 'examples'), ['--preset', 'reading', '--strict']);
 assert.equal(sample.files, 3);
 console.log('PASS bundled examples: all three PDFs exported in strict mode.');

@@ -450,6 +450,10 @@ th {
 .table-part + .table-part {
   break-before: page;
 }
+.continuous-page .table-part + .table-part {
+  break-before: auto;
+  page-break-before: auto;
+}
 .property-icon {
   display: inline-block;
   width: .95em;

@@ -54,7 +54,11 @@ Actual Notion `details.tab-page` exports are tabs, not toggles; render all suppl
 
 Callout icons may live inside their own wrapper. Exclude only that icon wrapper, never the callout's body images. Iconless callouts remain iconless. Known static symbols use small locally authored vectors; no imported SVG is executed. Local raster icons use the same bounded asset loader as content images.
 
+The asset loader recognizes raster formats by file signature instead of trusting the extension. HEIC/HEIF is the one deliberate conversion path: bounded local input is decoded and encoded as JPEG before snapshot embedding, while the original file remains untouched. Keep import failures specific (`missing-image`, `unsupported-image-format`, `image-conversion-failed`, `image-read-failed`, `unsafe-image-reference`, and `image-too-large`) so reports do not misdescribe a present but unusable image as missing. Rendering separately reports invalid embedded image data and excessive decoded dimensions.
+
 Block spacing is defined centrally in `print.css` through `data-block-type`. Each block gets a single leading gap, using the larger separation requested by itself and its previous neighbor. Do not rely on margin collapse: flex callouts can add margins that collapse between ordinary blocks. Ordinary block gaps scale with the body font through `rem`; the measured H1-H3 gaps use physical point values so compact presets retain Notion's whitespace. Headings have more space before than after, lists and page references stay compact, and visual blocks have a full body-font unit of separation. Structural children such as rows, cells, columns and list items keep their own layout rules.
+
+Continuous output measures the fully loaded article after fonts and images decode, adds the configured top and bottom margins, and appends a page-size override before printing. It preserves the selected paper width and scale, disables forced page breaks between table partitions, suppresses the footer, and rejects documents above the 20,000 mm application limit. PDF.js must confirm that the result contains exactly one page.
 
 Dividers use the ordinary text gap on both sides. Notion's exported stylesheet leaves the divider at the browser's roughly half-em block margins beside paragraphs; a section-sized gap makes the rule look detached from both neighboring blocks.
 
@@ -68,7 +72,7 @@ Notion HTML exports wrap file anchors in a padded `.source` figure, but the supp
 
 Wide, rectangular tables are partitioned into groups based on physical page width and font size. The title property is repeated when its exported icon is recognized; otherwise the first column is repeated. Content lengths guide column widths within each partition. Merged/irregular cells use the unsplit fallback with a warning. This is a heuristic and still requires visual review for unusual tables.
 
-Print styles embed Latin Inter and JetBrains Mono fonts and KaTeX font assets. No source stylesheets, JavaScript or remote fonts are executed or fetched. Only three recognized Notion property icons are redrawn from fixed local paths; arbitrary SVG is not trusted.
+Print styles embed Latin Inter and JetBrains Mono fonts and KaTeX font assets. No source stylesheets, JavaScript or remote fonts are executed or fetched. Only three recognized Notion property icons are redrawn from fixed local paths; arbitrary SVG is not trusted. The importer remains offline unless `--fetch-notion-covers` is set. That exception accepts only direct HTTPS responses from fixed official Notion hosts under `/images/page-cover/`, applies the normal image byte limits and signature checks, and rejects redirects and arbitrary remote URLs before Chromium sees the document.
 
 ## Verification
 

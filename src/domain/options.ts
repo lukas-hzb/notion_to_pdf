@@ -14,9 +14,14 @@ export const optionsSchema = z.object({
   bookmarks: z.enum(['card', 'compact']).default('card'),
   databasePages: z.enum(['all', 'content']).default('all'),
   pageNumbers: z.boolean().default(true),
+  continuousPage: z.boolean().default(false),
   includeCover: z.boolean().default(true),
   strict: z.boolean().default(false),
-}).strict().transform(options => ({ ...options, preserveTaskStatus: options.preserveTaskStatus ?? options.tasks === 'checkboxes' }));
+}).strict().transform(options => ({
+  ...options,
+  preserveTaskStatus: options.preserveTaskStatus ?? options.tasks === 'checkboxes',
+  pageNumbers: options.continuousPage ? false : options.pageNumbers,
+}));
 
 export type ExportOptions = z.infer<typeof optionsSchema>;
 export const defaultOptions: ExportOptions = optionsSchema.parse({});

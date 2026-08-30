@@ -26,8 +26,10 @@ and full Notion or cross-platform parity has not been established.
 - **Flexible input** — Import a Notion ZIP, a nested export archive, an
   extracted folder, or an individual HTML file.
 - **Notion-aware layout** — Preserve columns, page covers, icons, headings,
-  lists, callouts, quotes, dividers, local images, tables, files, tabs, and
-  supported rich text.
+  lists, callouts, quotes, dividers, local images (including HEIC/HEIF), tables,
+  files, tabs, and supported rich text.
+- **Continuous reading** — Optionally render each document as one long PDF page
+  without page breaks or a footer.
 - **Useful static content** — Expand toggles or turn them into ordinary
   sections; keep task checkboxes or convert them into unstruck bullet lists.
 - **Readable databases** — Split wide tables into column groups and repeat the
@@ -36,6 +38,8 @@ and full Notion or cross-platform parity has not been established.
   network request.
 - **Print controls** — Choose preset, paper size, orientation, margin, font
   size, cover, page numbers, columns, bookmarks, and database-record handling.
+- **Controlled cover retrieval** — Opt in to downloading built-in Notion page
+  covers when an HTML export contains only their official URL.
 - **Inspectable output** — Write a JSON report with generated files, skipped
   records, warnings, and runtime versions. Strict mode rejects known gaps.
 - **Private by design** — Parse source HTML into a typed document model and
@@ -132,6 +136,33 @@ npm run export -- --input "/path/to/export.zip" --list
 npm run export -- --input "/path/to/export.zip" --out "./output" --strict
 ```
 
+Create screen-oriented PDFs with one continuous page per Notion document and
+no page-number footer:
+
+```sh
+npm run export -- \
+  --input "/path/to/notion-export.zip" \
+  --out "./output" \
+  --continuous
+```
+
+Continuous pages retain the selected paper width and grow vertically with the
+content. They are intended for scrolling on screen; printing and “fit page”
+views can make very tall documents appear small.
+
+Some Notion exports reference a built-in page cover by URL instead of including
+the image bytes. Fetch only those official Notion covers explicitly:
+
+```sh
+npm run export -- \
+  --input "/path/to/notion-export.zip" \
+  --out "./output" \
+  --fetch-notion-covers
+```
+
+This option does not allow arbitrary remote images, bookmark previews, or URL
+redirects. Without it, conversion remains fully offline.
+
 See the [CLI reference](docs/CLI.md) for every option, exit behavior, report
 semantics, and automation guidance.
 
@@ -163,8 +194,9 @@ isolated Chromium → PDF.js checks → atomic PDFs and JSON report
 ```
 
 Source scripts, stylesheets, iframes, and arbitrary SVG are never executed.
-Local assets are resolved through bounded file access; remote resources are not
-downloaded. Chromium remains a replaceable rendering backend rather than an
+Local assets are resolved through bounded file access. Remote resources are not
+downloaded unless the user enables the narrowly scoped official Notion-cover
+option. Chromium remains a replaceable rendering backend rather than an
 application framework.
 
 ## Support and limitations
@@ -176,7 +208,7 @@ cannot be reconstructed.
 
 Current limitations include:
 
-- remote images and bookmark decoration are not downloaded;
+- arbitrary remote images and bookmark decoration are not downloaded;
 - local attachments are linked when resolvable but are not embedded into PDFs;
 - internal page links are not yet rewritten to generated PDF files;
 - database views such as boards, timelines, calendars, galleries, charts,
@@ -193,11 +225,17 @@ parity with every Notion version.
 
 ## Privacy and safety
 
-Documents stay on the local computer. There is no account, upload, telemetry,
-or remote asset fetching during conversion. Reports may contain page titles,
-paths, and identifiers, so treat them as private.
+Documents stay on the local computer. There is no account, upload, or telemetry.
+Conversion is offline by default. The optional `--fetch-notion-covers` flag
+makes direct HTTPS requests only to fixed official Notion hosts and paths, with
+no redirects, credentials, or arbitrary remote images. Reports may contain page
+titles, paths, and identifiers, so treat them as private.
 
 Archive imports validate paths, checksums, file types, nesting, and size limits.
+Local HEIC/HEIF photos are converted to JPEG during import; the source files
+remain unchanged. Missing files, unsupported formats, failed HEIC conversion,
+unsafe references, excessive file size, and PDF decoding failures are reported
+as separate issues.
 Symlinks, encrypted archives, ambiguous names, path traversal, active links,
 and assets outside the selected source are rejected. Temporary extraction
 directories are removed after use.

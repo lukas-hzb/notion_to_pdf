@@ -1,9 +1,9 @@
-import { describe, expect, it, afterEach } from 'vitest';
+import { describe, expect, it, afterEach, vi } from 'vitest';
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { parseNotionHtml, safeLink } from '../src/importers/html';
-import { importNotion, imageMime } from '../src/importers';
+import { importNotion, imageMime, isHeic, officialNotionCoverUrl } from '../src/importers';
 import { limits, safeArchivePath, within } from '../src/importers/files';
 import { hasBodyContent, type Block } from '../src/domain/model';
 import { zip } from './helpers/zip';
@@ -11,7 +11,10 @@ import { zip } from './helpers/zip';
 const html = (content: string) => `<!doctype html><html><head><title>Test</title></head><body><article id="page"><header><h1 class="page-title">Test</h1></header><div class="page-body">${content}</div></article></body></html>`;
 const flatten = (blocks: Block[]): Block[] => blocks.flatMap(block => [block, ...flatten(block.children)]);
 const temporary: string[] = [];
-afterEach(async () => { await Promise.all(temporary.splice(0).map(dir => rm(dir, { recursive: true, force: true }))); });
+afterEach(async () => {
+  vi.restoreAllMocks();
+  await Promise.all(temporary.splice(0).map(dir => rm(dir, { recursive: true, force: true })));
+});
 async function dir() { const value = await mkdtemp(path.join(os.tmpdir(), 'notion-pdf-test-')); temporary.push(value); return value; }
 
 describe('Notion HTML semantics', () => {
@@ -184,6 +187,8 @@ describe('untrusted files and links', () => {
   it('detects raster image signatures and refuses SVG', () => {
     expect(imageMime(Buffer.from([137,80,78,71,13,10,26,10]))).toBe('image/png');
     expect(imageMime(Buffer.from('<svg onload="alert(1)"></svg>'))).toBeUndefined();
+    const heic = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypmif1'), Buffer.alloc(4), Buffer.from('heicmif1')]);
+    expect(isHeic(heic)).toBe(true);
   });
   it('keeps source files unchanged and reports missing and external images', async () => {
     const root = await dir();
@@ -194,6 +199,53 @@ describe('untrusted files and links', () => {
     expect(await readFile(file, 'utf8')).toBe(original);
     expect(snapshot.issues.map(issue => issue.code)).toEqual(['missing-image', 'external-image']);
   });
+  it('fetches only official Notion covers when explicitly enabled', async () => {
+    const root = await dir();
+    const file = path.join(root, 'page.html');
+    const cover = 'https://app.notion.com/images/page-cover/woodcuts_1.jpg';
+    const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+    await writeFile(file, `<body><article id="page"><img class="page-cover-image" src="${cover}"><h1 class="page-title">Test</h1></article></body>`);
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(Uint8Array.from(bytes), { status: 200, headers: { 'content-length': String(bytes.length), 'content-type': 'image/png' } }));
+
+    const offline = await importNotion(file);
+    expect(offline.pages[0]?.cover).toBeUndefined();
+    expect(offline.issues).toEqual([expect.objectContaining({ code: 'external-image' })]);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    const enabled = await importNotion(file, undefined, { fetchNotionCovers: true });
+    expect(enabled.pages[0]?.cover).toBeTruthy();
+    expect(Object.values(enabled.assets)).toHaveLength(1);
+    expect(enabled.issues).toEqual([expect.objectContaining({ code: 'notion-cover-fetched', severity: 'info' })]);
+    expect(fetchMock).toHaveBeenCalledWith(new URL(cover), expect.objectContaining({ redirect: 'error' }));
+
+    fetchMock.mockResolvedValueOnce(new Response(Uint8Array.of(1), { status: 200, headers: { 'content-length': String(limits.fileBytes + 1) } }));
+    const oversized = await importNotion(file, undefined, { fetchNotionCovers: true });
+    expect(oversized.pages[0]?.cover).toBeUndefined();
+    expect(oversized.issues).toEqual([expect.objectContaining({ code: 'image-too-large' })]);
+  });
+  it('never fetches arbitrary remote images through the Notion-cover option', async () => {
+    const root = await dir();
+    const file = path.join(root, 'page.html');
+    await writeFile(file, '<body><article id="page"><img class="page-cover-image" src="https://example.com/images/page-cover/private.jpg"><h1 class="page-title">Test</h1></article></body>');
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const snapshot = await importNotion(file, undefined, { fetchNotionCovers: true });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(snapshot.issues).toEqual([expect.objectContaining({ code: 'external-image' })]);
+    expect(officialNotionCoverUrl('https://app.notion.com/images/page-cover/woodcuts_1.jpg')?.hostname).toBe('app.notion.com');
+    expect(officialNotionCoverUrl('https://app.notion.com/images/page-cover/woodcuts_1.jpg?token=secret')).toBeUndefined();
+    expect(officialNotionCoverUrl('http://app.notion.com/images/page-cover/woodcuts_1.jpg')).toBeUndefined();
+  });
+  it('propagates cancellation while an official Notion cover is being fetched', async () => {
+    const root = await dir();
+    const file = path.join(root, 'page.html');
+    await writeFile(file, '<body><article id="page"><img class="page-cover-image" src="https://app.notion.com/images/page-cover/woodcuts_1.jpg"><h1 class="page-title">Test</h1></article></body>');
+    const controller = new AbortController();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input, init) => {
+      controller.abort();
+      throw init?.signal?.reason ?? new Error('aborted');
+    });
+    await expect(importNotion(file, controller.signal, { fetchNotionCovers: true })).rejects.toThrow();
+  });
   it('does not read an image outside the chosen directory', async () => {
     const root = await dir();
     await mkdir(path.join(root, 'inside'));
@@ -202,6 +254,22 @@ describe('untrusted files and links', () => {
     await writeFile(file, html('<img src="../secret.png">'));
     const snapshot = await importNotion(file);
     expect(Object.keys(snapshot.assets)).toHaveLength(0);
+    expect(snapshot.issues).toEqual([expect.objectContaining({ code: 'unsafe-image-reference' })]);
+  });
+  it('distinguishes unsupported, oversized and corrupt HEIC images', async () => {
+    const root = await dir();
+    const file = path.join(root, 'page.html');
+    await writeFile(path.join(root, 'drawing.svg'), '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+    await writeFile(path.join(root, 'broken.heic'), Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypmif1'), Buffer.alloc(4), Buffer.from('heicmif1')]));
+    await writeFile(path.join(root, 'large.png'), Buffer.alloc(128, 1));
+    await writeFile(file, html('<img src="drawing.svg"><img src="broken.heic"><img src="large.png">'));
+    const previous = limits.fileBytes;
+    try {
+      limits.fileBytes = 64;
+      const snapshot = await importNotion(file);
+      expect(snapshot.issues.map(issue => issue.code)).toEqual(['unsupported-image-format', 'image-conversion-failed', 'image-too-large']);
+      expect(snapshot.issues.map(issue => issue.message).join(' ')).toContain('HEIC/HEIF');
+    } finally { limits.fileBytes = previous; }
   });
   it('omits remote bookmark decoration without misreporting missing content images', async () => {
     const root = await dir();
@@ -257,6 +325,23 @@ describe('untrusted files and links', () => {
     const snapshot = await importNotion(file);
     expect(Object.values(snapshot.assets)).toHaveLength(1);
     expect(Object.values(snapshot.assets)[0]?.dataUrl).toBe(`data:image/png;base64,${bytes.toString('base64')}`);
+    expect(snapshot.issues).toEqual([]);
+  });
+  it('loads raster images from nested Notion subpages', async () => {
+    const root = await dir();
+    const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+    const file = path.join(root, 'subpage.zip');
+    await writeFile(file, zip([
+      { name: 'Parent.html', data: html('<figure class="link-to-page"><a href="Parent/Child.html">Child</a></figure>').replace('id="page"', 'id="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"') },
+      { name: 'Parent/Child.html', data: html('<figure><img src="Child/photo.png"><figcaption>Nested image</figcaption></figure>').replace('id="page"', 'id="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"') },
+      { name: 'Parent/Child/photo.png', data: bytes },
+    ]));
+    const snapshot = await importNotion(file);
+    const child = snapshot.pages.find(page => page.sourcePath === 'Parent/Child.html');
+    expect(child).toMatchObject({ parentId: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' });
+    expect(child?.blocks[0]).toMatchObject({ type: 'image', caption: [{ text: 'Nested image' }] });
+    expect(child?.blocks[0]?.src).toBeTruthy();
+    expect(Object.values(snapshot.assets)).toHaveLength(1);
     expect(snapshot.issues).toEqual([]);
   });
   it('loads bookmark thumbnails and icons offline without duplicating asset bytes', async () => {
