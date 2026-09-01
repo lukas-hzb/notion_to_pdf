@@ -53,7 +53,7 @@
     "parse5": "8.0.1",
     "pdfjs-dist": "6.2.108",
     "yauzl": "3.4.0",
-    "zod": "4.4.3"
+    "zod": "4.5.2"
   },
   "devDependencies": {
     "@types/katex": "0.16.8",
