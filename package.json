@@ -57,11 +57,11 @@
   },
   "devDependencies": {
     "@types/katex": "0.16.8",
-    "@types/node": "26.4.0",
+    "@types/node": "26.6.3",
     "@types/yauzl": "3.4.0",
-    "electron": "44.0.0",
+    "electron": "44.4.5",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",
-    "vitest": "4.1.11"
+    "vitest": "5.0.2"
   }
 }
