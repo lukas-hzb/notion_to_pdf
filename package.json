@@ -51,7 +51,7 @@
     "heic-convert": "2.1.0",
     "katex": "0.18.9",
     "parse5": "8.0.1",
-    "pdfjs-dist": "6.3.289",
+    "pdfjs-dist": "6.4.299",
     "yauzl": "3.4.0",
     "zod": "4.6.7"
   },
